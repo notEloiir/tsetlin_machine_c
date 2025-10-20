@@ -6,6 +6,18 @@ C library for Tsetlin Machines.
 - TM types: normal (dense), sparse, stateless (sparse)
 - model import from green_tsetlin https://github.com/ooki/green_tsetlin
 
+## TODOs
+1. Simplify project structure of Python and C files
+2. Add CMakeLists.txt for building and installing the project
+3. Add flatcc git submodules as dependencies
+4. Include unity test framework in CMakeLists.txt
+5. Consider feasability of using memmap when loading models
+6. Print learning debug (e.g. accuracy) every iteration during training
+7. Add manually adding rules to the model
+8. Add prediction explananations
+9. Add README.md with project description, screenshots and usage instructions
+10. Test exporting to edge devices with different architectures
+
 ## Requirements
 - gcc
 - make (optional)
