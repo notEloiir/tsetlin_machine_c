@@ -17,6 +17,7 @@ C library for Tsetlin Machines.
 8. Add prediction explananations
 9. Add README.md with project description, screenshots and usage instructions
 10. Test exporting to edge devices with different architectures
+11. (Optional) Complete and add FBS to Sparse TM
 
 ## Requirements
 - gcc
