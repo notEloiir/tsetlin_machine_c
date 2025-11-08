@@ -1,0 +1,13 @@
+if(ENABLE_FLATCC)
+    set(FLATCC_TEST OFF CACHE BOOL "" FORCE)
+    set(FLATCC_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(FLATCC_INSTALL OFF CACHE BOOL "" FORCE)
+    set(FLATCC_RTONLY ON CACHE BOOL "" FORCE)
+    add_subdirectory(flatcc)
+else()
+    message(STATUS "third_party: FlatCC disabled (ENABLE_FLATCC=OFF)")
+endif()
+
+if(BUILD_TESTING)
+    add_subdirectory(Unity)
+endif()
