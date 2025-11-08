@@ -1,6 +1,6 @@
 [project]
-name = "TsetlinMachineC"
-version = "0.1.0"
+name = "tsetlin-machine-py"
+version = "1.0.0"
 description = "C library for Tsetlin Machines."
 readme = "README.md"
 requires-python = ">=3.13"
