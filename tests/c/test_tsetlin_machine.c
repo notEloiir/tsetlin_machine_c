@@ -1,10 +1,6 @@
-#include "../../src/c/include/tsetlin_machine.h"
-#include "unity/unity.h"
+#include "tsetlin_machine.h"
+#include "unity.h"
 #include "stdlib.h"
-
-#include "../../src/c/src/tsetlin_machine.c"
-#include "../../src/c/src/utility.c"
-#include "../../src/c/src/fast_prng.c"
 
 
 void basic_inference(void) {
