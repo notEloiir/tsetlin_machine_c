@@ -10,8 +10,8 @@ project(tsetlin_machine_c
 )
 
 option(ENABLE_FLATCC "Build FlatCC from third_party" ON)
-option(BUILD_TESTING "Enable building third_party tests" ON)
 option(BUILD_EXAMPLES "Enable building examples" ON)
+option(BUILD_TESTING "Enable building third_party tests" ON)
 
 add_subdirectory(third_party)
 
@@ -21,7 +21,9 @@ endif()
 
 add_subdirectory(src/tsetlin_machine_c)
 
-add_subdirectory(examples)
+if(BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
 
 if(BUILD_TESTING)
     enable_testing()
