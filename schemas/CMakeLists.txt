@@ -2,7 +2,7 @@ set(GENERATED_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
 file(MAKE_DIRECTORY ${GENERATED_DIR})
 
 set(TM_SCHEMA_FILE ${CMAKE_CURRENT_SOURCE_DIR}/tsetlin_machine.fbs)
-set(TM_GENERATED_HEADERS 
+set(TM_GENERATED_HEADERS
     ${GENERATED_DIR}/flatbuffers_common_builder.h
     ${GENERATED_DIR}/flatbuffers_common_reader.h
     ${GENERATED_DIR}/tsetlin_machine_builder.h
@@ -24,10 +24,10 @@ add_custom_target(
 
 add_library(tsetlin_machine_fbs INTERFACE)
 
-target_include_directories(tsetlin_machine_fbs 
+target_include_directories(tsetlin_machine_fbs
     INTERFACE ${GENERATED_DIR}
 )
-target_link_libraries(tsetlin_machine_fbs 
+target_link_libraries(tsetlin_machine_fbs
     INTERFACE flatcc_lib
 )
 

@@ -4,9 +4,10 @@
 #include <string.h>
 #include <limits.h>
 
-#include "flatbuffers/tsetlin_machine_builder.h"
 #include "tsetlin_machine.h"
 #include "utility.h"
+
+#include "generated/tsetlin_machine_builder.h"
 
 
 // --- Basic y_eq function ---

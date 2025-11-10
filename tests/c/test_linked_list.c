@@ -1,9 +1,7 @@
 #include "sparse_tsetlin_machine.h"
-#include "unity/unity.h"
+#include "unity.h"
 #include "stdlib.h"
 
-
-#include "../../src/c/src/sparse_tsetlin_machine.c"
 
 void insert_nodes(void) {
 	struct TAStateNode *head = NULL;

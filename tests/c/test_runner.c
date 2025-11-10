@@ -7,7 +7,7 @@
 
 
 #include "tsetlin_machine.h"
-#include "unity/unity.h"
+#include "unity.h"
 #include "stdlib.h"
 
 
