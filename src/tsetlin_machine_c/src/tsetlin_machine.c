@@ -7,7 +7,9 @@
 #include "tsetlin_machine.h"
 #include "utility.h"
 
+#if BUILD_FLATCC
 #include "tsetlin_machine_builder.h"
+#endif
 
 
 // --- Basic y_eq function ---
@@ -235,7 +237,7 @@ save_error:
     fprintf(stderr, "tm_save aborted, file %s may be incomplete\n", filename);
 }
 
-
+#if BUILD_FLATCC
 // Load Tsetlin Machine from a flatbuffers file
 struct TsetlinMachine *tm_load_fbs(
     const char *filename, uint32_t y_size, uint32_t y_element_size
@@ -415,6 +417,7 @@ void tm_save_fbs(struct TsetlinMachine *tm, const char *filename) {
     flatcc_builder_aligned_free(buf);
     flatcc_builder_clear(&builder);
 }
+#endif
 
 
 // Free all allocated memory
