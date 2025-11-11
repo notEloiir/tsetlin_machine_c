@@ -1,11 +1,11 @@
-if(ENABLE_FLATCC)
+if(BUILD_FLATCC)
     set(FLATCC_EXAMPLES OFF CACHE BOOL "" FORCE)
     set(FLATCC_INSTALL OFF CACHE BOOL "" FORCE)
     set(FLATCC_RTONLY OFF CACHE BOOL "" FORCE)
     set(FLATCC_TEST OFF CACHE BOOL "" FORCE)
     add_subdirectory(flatcc)
 else()
-    message(STATUS "third_party: FlatCC disabled (ENABLE_FLATCC=OFF)")
+    message(STATUS "third_party: FlatCC disabled (BUILD_FLATCC=OFF)")
 endif()
 
 if(BUILD_TESTING)
