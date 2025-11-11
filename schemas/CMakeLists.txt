@@ -27,8 +27,7 @@ add_library(tsetlin_machine_fbs INTERFACE)
 target_include_directories(tsetlin_machine_fbs
     INTERFACE ${GENERATED_DIR}
 )
-target_link_libraries(tsetlin_machine_fbs
-    INTERFACE flatcc_lib
-)
 
-add_dependencies(tsetlin_machine_fbs tsetlin_machine_fbs_codegen)
+target_link_libraries(tsetlin_machine_fbs
+    INTERFACE flatccrt
+)
