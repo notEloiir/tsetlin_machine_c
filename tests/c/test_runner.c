@@ -4,8 +4,6 @@
  *  Created on: 11 May 2025
  *      Author: Elouie
  */
-
-
 #include "tsetlin_machine.h"
 #include "unity.h"
 #include "stdlib.h"

@@ -2,6 +2,9 @@
 #include "unity.h"
 #include "stdlib.h"
 
+#include "../../src/tsetlin_machine_c/src/tsetlin_machine.c"
+#include "../../src/tsetlin_machine_c/src/fast_prng.c"
+
 
 void basic_inference(void) {
     struct TsetlinMachine *tm = tm_create(1, 100, 3, 1, 127, -127, 0, 1, sizeof(uint8_t), 10.f, 42);
