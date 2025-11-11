@@ -18,9 +18,7 @@ target_sources(tsetlin_machine_c
             include/stateless_tsetlin_machine.h
 )
 
-add_dependencies(tsetlin_machine_c tsetlin_machine_fbs_codegen)
-
-target_link_libraries(tsetlin_machine_c
-    PUBLIC
-        tsetlin_machine_fbs
-)
+if(BUILD_FLATCC)
+    add_dependencies(tsetlin_machine_c tsetlin_machine_fbs_codegen)
+    target_link_libraries(tsetlin_machine_c PUBLIC tsetlin_machine_fbs)
+endif()
