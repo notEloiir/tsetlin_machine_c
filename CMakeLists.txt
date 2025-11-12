@@ -10,6 +10,7 @@ project(tsetlin_machine_c
 )
 
 option(BUILD_FLATCC "Build FlatCC from third_party" ON)
+option(BUILD_PYTHON "Enable building Python bindings" ON)
 option(BUILD_EXAMPLES "Enable building examples" ON)
 option(BUILD_TESTING "Enable building third_party tests" ON)
 

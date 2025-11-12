@@ -1,0 +1,258 @@
+from numbers import Integral, Real
+
+import green_tsetlin as gt
+import numpy as np
+from scipy.sparse import issparse, csr_matrix
+from sklearn.base import BaseEstimator, ClassifierMixin, _fit_context
+from sklearn.preprocessing import LabelEncoder
+from sklearn.utils._param_validation import Interval
+from sklearn.utils.multiclass import check_classification_targets
+from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
+
+
+class GreenTsetlinSparseClassifier(ClassifierMixin, BaseEstimator):
+    """
+    A Scikit-learn compatible Green Tsetlin Machine classifier using SparseTsetlinMachine.
+
+    Parameters
+    ----------
+    n_clauses : int, default=1000
+        The number of clauses in the Tsetlin Machine.
+    s : float, default=3.0
+        The S hyperparameter for the Tsetlin Machine.
+    threshold : int, default=1000
+        The T threshold for the Tsetlin Machine.
+    literal_budget : int, default=4
+        The literal budget for the Tsetlin Machine.
+    boost_true_positives : bool, default=False
+        Whether to boost true positive feedback.
+    dynamic_AL : bool, default=True
+        Whether to use dynamic Active Literals.
+    lower_ta_threshold : int, default=-40
+        The lower threshold for the Tsetlin Automaton.
+    active_literals_size : int, default=100
+        The size of the active literals.
+    clause_size : int, default=50
+        The size of each clause.
+    n_epochs : int, default=10
+        The number of epochs to train for.
+    random_state : int, default=None
+        Controls the randomness of the estimator. Pass an int for reproducible output across multiple function calls.
+    n_jobs : int, default=1
+        Number of parallel jobs to use for training.
+        -1 means using all processors.
+    verbose : int, default=0
+        Controls the verbosity: the higher, the more messages.
+        > 0 enables progress bar.
+    """
+
+    _parameter_constraints: dict = {
+        "n_clauses": [Interval(Integral, 1, None, closed="left")],
+        "s": [Interval(Real, 1, None, closed="neither")],
+        "threshold": [Interval(Integral, 1, None, closed="left")],
+        "literal_budget": [Interval(Integral, 1, None, closed="left")],
+        "boost_true_positives": [bool],
+        "dynamic_AL": [bool],
+        "lower_ta_threshold": [Interval(Integral, None, None, closed="neither")],
+        "active_literals_size": [Interval(Integral, 1, None, closed="left")],
+        "clause_size": [Interval(Integral, 1, None, closed="left")],
+        "n_epochs": [Interval(Integral, 1, None, closed="left")],
+        "random_state": ["random_state"],
+        "n_jobs": [Integral, None],
+        "verbose": [Interval(Integral, 0, None, closed="left")],
+    }
+
+    def __init__(
+        self,
+        n_clauses=1000,
+        s=3.0,
+        threshold=1000,
+        literal_budget=4,
+        boost_true_positives=False,
+        dynamic_AL=True,
+        lower_ta_threshold=-40,
+        active_literals_size=100,
+        clause_size=50,
+        n_epochs=10,
+        random_state=None,
+        n_jobs=1,
+        verbose=0,
+    ):
+        self.n_clauses = n_clauses
+        self.s = s
+        self.threshold = threshold
+        self.literal_budget = literal_budget
+        self.boost_true_positives = boost_true_positives
+        self.dynamic_AL = dynamic_AL
+        self.lower_ta_threshold = lower_ta_threshold
+        self.active_literals_size = active_literals_size
+        self.clause_size = clause_size
+        self.n_epochs = n_epochs
+        self.random_state = random_state
+        self.n_jobs = n_jobs
+        self.verbose = verbose
+
+    @_fit_context(prefer_skip_nested_validation=True)
+    def fit(self, X, y):
+        """
+        Fit the Green Tsetlin Machine classifier.
+
+        Parameters
+        ----------
+        X : array-like or sparse matrix of shape (n_samples, n_features)
+            The training input samples. Must be binary (0 or 1).
+        y : array-like of shape (n_samples,)
+            The target values (class labels).
+
+        Returns
+        -------
+        self : object
+            Fitted estimator.
+        """
+        X, y = check_X_y(X, y, dtype=np.uint8, accept_sparse=["csr", "csc", "coo"])
+        check_classification_targets(y)
+        vals = X.data if issparse(X) else np.asarray(X)
+        if np.any((vals != 0) & (vals != 1)):
+            raise ValueError("Input X must be binary (contain only 0s and 1s).")
+
+        self.label_encoder_ = LabelEncoder()
+        y_mapped = self.label_encoder_.fit_transform(y).astype(np.uint32)
+        self.classes_ = self.label_encoder_.classes_
+
+        self.n_classes_ = len(self.classes_)
+        if self.n_classes_ < 2:
+            raise ValueError(
+                "This classifier needs at least 2 classes; got %d class"
+                % self.n_classes_
+            )
+
+        self.n_features_in_ = X.shape[1]
+
+        self.tm_ = gt.SparseTsetlinMachine(
+            n_literals=self.n_features_in_,
+            n_clauses=self.n_clauses,
+            n_classes=self.n_classes_,
+            s=float(self.s),
+            threshold=self.threshold,
+            literal_budget=self.literal_budget,
+            boost_true_positives=self.boost_true_positives,
+            dynamic_AL=self.dynamic_AL,
+        )
+        self.tm_.lower_ta_threshold = self.lower_ta_threshold
+        self.tm_.active_literals_size = self.active_literals_size
+        self.tm_.clause_size = self.clause_size
+
+        trainer = gt.Trainer(
+            self.tm_,
+            seed=self.random_state,
+            n_jobs=self.n_jobs,
+            n_epochs=self.n_epochs,
+            progress_bar=(self.verbose > 0),
+        )
+
+        X_train = csr_matrix(X, dtype=np.uint8)
+        # Green Tsetlin expects X to be uint8 and y to be uint32
+        # X is already checked for uint8. y_mapped is uint32.
+        trainer.set_train_data(X_train, y_mapped)
+        # Using training data as eval data as per the example,
+        # this is often for monitoring training progress.
+        trainer.set_eval_data(X_train, y_mapped)
+        trainer.train()
+
+        self.predictor_ = self.tm_.get_predictor()
+        self.is_fitted_ = True
+        return self
+
+    def predict(self, X):
+        """
+        Predict class labels for samples in X.
+
+        Parameters
+        ----------
+        X : array-like or sparse matrix of shape (n_samples, n_features)
+            The input samples. Must be binary (0 or 1).
+
+        Returns
+        -------
+        y_pred : ndarray of shape (n_samples,)
+            Predicted class labels.
+        """
+        check_is_fitted(self)
+        X = check_array(X, dtype=np.uint8, accept_sparse=["csr", "csc", "coo"])
+
+        vals = X.data if issparse(X) else np.asarray(X)
+        if np.any((vals != 0) & (vals != 1)):
+            raise ValueError("Input X must be binary (contain only 0s and 1s).")
+
+        if X.shape[1] != self.n_features_in_:
+            raise ValueError(
+                f"Number of features of the input must be {self.n_features_in_}, got {X.shape[1]}"
+            )
+
+        # green_tsetlin predictor doesn't work with csr_matrix
+        X_dense = X.toarray() if issparse(X) else X
+
+        vectorized_predict = np.vectorize(self.predictor_.predict, signature="(n)->()")
+        y_pred_mapped = vectorized_predict(X_dense)
+
+        y_pred = self.label_encoder_.inverse_transform(y_pred_mapped)
+
+        return y_pred
+
+    def _more_tags(self):
+        return {"binary_only": True, "X_types": ["sparse"]}
+
+    def estimate_model_size(self):
+        """
+        Estimate the model size in bytes.
+
+        This includes the memory taken by the clause weights and clause states.
+
+        Returns
+        -------
+        int
+            Estimated model size in bytes.
+        """
+        check_is_fitted(self)
+
+        # Clause weights: (self.n_clauses, self.n_classes_) of np.int8
+        clause_weights_bytes = (
+            self.n_clauses * self.n_classes_ * np.dtype(np.int8).itemsize
+        )
+
+        # Class votes: (self.n_classes_) of np.int32
+        class_votes_bytes = self.n_classes_ * np.dtype(np.int32).itemsize
+
+        # Literal counts: (self.n_clauses) of np.int32
+        literal_counts_bytes = self.n_clauses * np.dtype(np.int32).itemsize
+
+        # Estimating size of data in list-of-lists structures.
+        # This does not account for Python list object overhead, only the data they would hold
+        # if stored contiguously as typed arrays. Literals/indices are assumed to be int32.
+
+        # Clauses: self.n_clauses * 2 lists, each holding up to self.clause_size int32s
+        clauses_data_bytes = (
+            (self.n_clauses * 2) * self.clause_size * np.dtype(np.int32).itemsize
+        )
+
+        # Clause indexes: self.n_clauses * 2 lists, each holding up to self.clause_size int32s
+        clause_indexes_data_bytes = (
+            (self.n_clauses * 2) * self.clause_size * np.dtype(np.int32).itemsize
+        )
+
+        # Active literals: self.n_classes_ * 2 lists, each holding up to self.active_literals_size int32s
+        active_literals_data_bytes = (
+            (self.n_classes_ * 2)
+            * self.active_literals_size
+            * np.dtype(np.int32).itemsize
+        )
+
+        total_bytes = (
+            clause_weights_bytes
+            + class_votes_bytes
+            + literal_counts_bytes
+            + clauses_data_bytes
+            + clause_indexes_data_bytes
+            + active_literals_data_bytes
+        )
+        return total_bytes
