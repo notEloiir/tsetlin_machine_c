@@ -15,16 +15,14 @@ add_custom_command(
     COMMAND flatcc_cli -a -o ${GENERATED_DIR} ${TM_SCHEMA_FILE}
     DEPENDS ${TM_SCHEMA_FILE} flatcc_cli
     COMMENT "Generating flatbuffers code from ${TM_SCHEMA_FILE}"
+    VERBATIM
 )
 
-add_custom_target(
-    tsetlin_machine_fbs_codegen
+add_custom_target(tsetlin_machine_fbs_codegen
     DEPENDS ${TM_GENERATED_HEADERS}
 )
 
 add_library(tsetlin_machine_fbs INTERFACE)
 add_dependencies(tsetlin_machine_fbs tsetlin_machine_fbs_codegen)
-
 target_include_directories(tsetlin_machine_fbs INTERFACE ${GENERATED_DIR})
-
 target_link_libraries(tsetlin_machine_fbs INTERFACE flatccrt)
