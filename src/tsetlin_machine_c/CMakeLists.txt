@@ -27,7 +27,13 @@ if(BUILD_FLATCC)
     )
     target_link_libraries(tsetlin_machine_c
         PRIVATE $<BUILD_INTERFACE:tsetlin_machine_fbs>
-        PUBLIC  $<BUILD_INTERFACE:flatccrt>
+        PUBLIC $<BUILD_INTERFACE:flatccrt>
+    )
+    install(TARGETS flatccrt
+        COMPONENT tsetlin_machine_c
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
 endif()
 
