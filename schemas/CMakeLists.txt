@@ -26,3 +26,32 @@ add_library(tsetlin_machine_fbs INTERFACE)
 add_dependencies(tsetlin_machine_fbs tsetlin_machine_fbs_codegen)
 target_include_directories(tsetlin_machine_fbs INTERFACE ${GENERATED_DIR})
 target_link_libraries(tsetlin_machine_fbs INTERFACE flatccrt)
+
+if(BUILD_PYTHON)
+    set(PYTHON_GENERATED_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated_py)
+    file(MAKE_DIRECTORY ${PYTHON_GENERATED_DIR})
+
+    set(PYTHON_STAMP_FILE ${CMAKE_CURRENT_BINARY_DIR}/python_gen.stamp)
+
+    add_custom_command(
+        OUTPUT ${PYTHON_STAMP_FILE}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${PYTHON_GENERATED_DIR}
+        COMMAND $<TARGET_FILE:flatc> --python --gen-object-api --python-typing -o ${PYTHON_GENERATED_DIR} ${TM_SCHEMA_FILE}
+        COMMAND ${CMAKE_COMMAND} -E touch ${PYTHON_STAMP_FILE}
+        DEPENDS ${TM_SCHEMA_FILE} flatc
+        COMMENT "Generating flatbuffers python code from ${TM_SCHEMA_FILE}"
+        VERBATIM
+    )
+
+    add_custom_target(tsetlin_machine_fbs_py_codegen
+        DEPENDS ${PYTHON_STAMP_FILE}
+    )
+
+    add_dependencies(tsetlin_machine_fbs tsetlin_machine_fbs_py_codegen)
+
+    install(
+        DIRECTORY ${PYTHON_GENERATED_DIR}/TsetlinMachine
+        COMPONENT tsetlin_machine_py
+        DESTINATION .
+    )
+endif()
