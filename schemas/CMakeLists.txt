@@ -25,10 +25,6 @@ add_custom_target(
 add_library(tsetlin_machine_fbs INTERFACE)
 add_dependencies(tsetlin_machine_fbs tsetlin_machine_fbs_codegen)
 
-target_include_directories(tsetlin_machine_fbs
-    INTERFACE ${GENERATED_DIR}
-)
+target_include_directories(tsetlin_machine_fbs INTERFACE ${GENERATED_DIR})
 
-target_link_libraries(tsetlin_machine_fbs
-    INTERFACE flatccrt
-)
+target_link_libraries(tsetlin_machine_fbs INTERFACE flatccrt)
