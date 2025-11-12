@@ -8,3 +8,4 @@
 .clangd
 .cproject
 build/
+install/
