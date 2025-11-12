@@ -64,6 +64,7 @@ struct TsetlinMachine *tm_load(
 // Save Tsetlin Machine to a bin file
 void tm_save(const struct TsetlinMachine *tm, const char *filename);
 
+#if BUILD_FLATCC
 // Load Tsetlin Machine from a flatbuffers file
 struct TsetlinMachine *tm_load_fbs(
     const char *filename, uint32_t y_size, uint32_t y_element_size
@@ -71,6 +72,7 @@ struct TsetlinMachine *tm_load_fbs(
 
 // Save Tsetlin Machine to a flatbuffers file
 void tm_save_fbs(struct TsetlinMachine *tm, const char *filename);
+#endif
 
 // Free all allocated memory
 // It also frees the TsetlinMachine struct itself
