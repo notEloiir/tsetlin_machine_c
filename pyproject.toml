@@ -5,9 +5,24 @@ description = "C library for Tsetlin Machines."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "flatbuffers>=25.2.10",
+    "datasets>=4.4.1",
+    "flatbuffers>=25.9.23",
     "green-tsetlin>=1.0.1",
+    "lightgbm>=4.6.0",
+    "matplotlib>=3.10.7",
+    "notebook>=7.4.7",
     "numpy>=2.2.5",
     "pandas>=2.2.3",
+    "prettytable>=3.16.0",
     "scikit-learn>=1.6.1",
 ]
+
+[build-system]
+requires = ["scikit-build-core", "cmake>=3.23", "ninja"]
+build-backend = "scikit_build_core.build"
+
+[tool.scikit-build]
+cmake.source-dir = "."
+cmake.args = ["-DBUILD_SHARED_LIBS=ON", "-DBUILD_PYTHON=ON"]
+wheel.packages = ["src/tsetlin_machine_py"]
+install.components = ["tsetlin_machine_c", "tsetlin_machine_py"]
