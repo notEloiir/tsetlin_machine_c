@@ -1,6 +1,9 @@
 from numbers import Integral, Real
 from pathlib import Path
 import ctypes
+import sysconfig
+import sys
+import os
 
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin, _fit_context
@@ -33,8 +36,8 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
         Number of training epochs.
     random_state : int, default=None
         Controls the randomness of the estimator.
-    lib_path : str, default="./libtsetlin.so"
-        Path to the compiled C library for the Tsetlin Machine.
+    lib_dir : str, default=None
+        Path to the compiled C libraries directory.
     """
 
     _parameter_constraints: dict = {
@@ -46,7 +49,7 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
         "s": [Interval(Real, 1.0, None, closed="left")],
         "epochs": [Interval(Integral, 1, None, closed="left")],
         "random_state": ["random_state", None],
-        "lib_path": [str],
+        "lib_dir": [str, Path, None],
     }
 
     def __init__(
@@ -59,7 +62,7 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
         s=3.0,
         epochs=10,
         random_state=None,
-        lib_path="./libtsetlin_machine_c.so",
+        lib_dir=None,
     ):
         self.threshold = threshold
         self.num_clauses = num_clauses
@@ -69,23 +72,51 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
         self.s = s
         self.epochs = epochs
         self.random_state = random_state
-        self.lib_path = lib_path
+        self.lib_dir = (
+            (Path(sysconfig.get_paths()["purelib"]) / "lib")
+            if lib_dir is None
+            else lib_dir
+        )
 
         self.lib_tm = None
         self._tm_instance_ = None
 
     def _load_and_configure_lib(self):
-        """Helper function to lazy-load the C library and configure functions."""
+        """
+        Helper function to lazy-load the C library and configure functions
+        in a cross-platform way.
+        """
         # Only load if it hasn't been loaded yet.
-        if self.lib_tm is None:
-            try:
-                self.lib_tm = ctypes.CDLL(Path(self.lib_path).resolve())
-                self._configure_c_functions()
-            except OSError as e:
-                raise OSError(
-                    f"Could not load C library from {self.lib_path}. "
-                    f"Ensure it's compiled and path is correct. Error: {e}"
-                )
+        if self.lib_tm is not None:
+            return
+
+        if sys.platform == "win32":  # windows
+            flatcc_name = "flatccrt.dll"
+            tsetlin_name = "tsetlin_machine_c.dll"
+            load_mode = 0
+        elif sys.platform == "darwin":  # macOS
+            flatcc_name = "libflatccrt.dylib"
+            tsetlin_name = "libtsetlin_machine_c.dylib"
+            load_mode = ctypes.RTLD_GLOBAL
+        else:  # linux and other POSIX
+            flatcc_name = "libflatccrt.so"
+            tsetlin_name = "libtsetlin_machine_c.so"
+            load_mode = ctypes.RTLD_GLOBAL
+
+        flatcc_path = self.lib_dir / flatcc_name
+        tsetlin_path = self.lib_dir / tsetlin_name
+
+        try:
+            if flatcc_path.exists():
+                ctypes.CDLL(str(flatcc_path.resolve()), mode=load_mode)
+            self.lib_tm = ctypes.CDLL(str(tsetlin_path.resolve()), mode=load_mode)
+            
+            self._configure_c_functions()
+        except OSError as e:
+            raise OSError(
+                f"Could not load libraries from {self.lib_dir}. "
+                f"Ensure it's compiled and path is correct. Error: {e}"
+            )
 
     def _configure_c_functions(self):
         """Define argument types and return types for C functions."""
