@@ -8,7 +8,7 @@ C library for Tsetlin Machines.
 
 ## TODOs
 1. ~~Simplify project structure of Python and C files~~
-2. Add CMakeLists.txt for building and installing the project
+2. ~~Add CMakeLists.txt for building and installing the project~~
 3. ~~Add flatcc git submodules as dependencies~~
 4. ~~Include unity test framework in CMakeLists.txt~~
 5. Consider feasability of using memmap when loading models
@@ -18,6 +18,7 @@ C library for Tsetlin Machines.
 9. Add README.md with project description, screenshots and usage instructions
 10. Test exporting to edge devices with different architectures
 11. (Optional) Complete and add FBS to Sparse TM
+12. Complete Python module for example notebooks and exporting models from green_tsetlin (`pip install .`)
 
 ## Requirements
 - gcc
