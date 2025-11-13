@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [build-system]
-requires = ["scikit-build-core", "cmake>=3.23", "ninja"]
+requires = ["scikit-build-core"]
 build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]
