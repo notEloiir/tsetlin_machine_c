@@ -1,5 +1,6 @@
 # Tsetlin Machine C
 C library for Tsetlin Machines.
+PLEASE RENAME REPO TO `tsetlin_machine_c` 🤐😣
 
 ## Features
 - C library for Tsetlin Machines: inference, training, saving to / loading from bin files
