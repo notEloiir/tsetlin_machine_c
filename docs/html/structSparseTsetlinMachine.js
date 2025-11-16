@@ -1,0 +1,28 @@
+var structSparseTsetlinMachine =
+[
+    [ "active_literals", "structSparseTsetlinMachine.html#abc2a59cc3d74c0571eb68fe9457bf93f", null ],
+    [ "al_row_size", "structSparseTsetlinMachine.html#afa03bc8eb8578b9537cd70438dba5876", null ],
+    [ "boost_true_positive_feedback", "structSparseTsetlinMachine.html#a69f94808ec293c6df124055c04a2f57c", null ],
+    [ "calculate_feedback", "structSparseTsetlinMachine.html#acc7e11a36af44f64884d8645f3845abc", null ],
+    [ "clause_output", "structSparseTsetlinMachine.html#adfadaf3bbe696f7e996af4d0e482c915", null ],
+    [ "max_state", "structSparseTsetlinMachine.html#a0f342d43018cb8993d9ea28aa74ec413", null ],
+    [ "mid_state", "structSparseTsetlinMachine.html#a49bedc562a2ea7486ee3ce90151471ae", null ],
+    [ "min_state", "structSparseTsetlinMachine.html#a8a24e2707d0c374dfbe5e611d52d803f", null ],
+    [ "num_classes", "structSparseTsetlinMachine.html#a4a06e19471ba38e83718c78b67c4ace5", null ],
+    [ "num_clauses", "structSparseTsetlinMachine.html#a06daad573861dd20661f8e71410a6c13", null ],
+    [ "num_literals", "structSparseTsetlinMachine.html#ac742820c0d504528b537727af9b0b505", null ],
+    [ "output_activation", "structSparseTsetlinMachine.html#aa547308b04e294ea0341b4a8b5b206bb", null ],
+    [ "rng", "structSparseTsetlinMachine.html#ab4fe5b6d4aa581715d7f2a906dd7cfd3", null ],
+    [ "s", "structSparseTsetlinMachine.html#a0cd644f1b8ff9d1a322f874b5a3e26f7", null ],
+    [ "s_inv", "structSparseTsetlinMachine.html#adcde9b3eb3ec16d1535f8f2b9710de7e", null ],
+    [ "s_min1_inv", "structSparseTsetlinMachine.html#ae4bb7ff80f3c8cb07de688cab1d3be49", null ],
+    [ "sparse_init_state", "structSparseTsetlinMachine.html#a3f27f1fd86486e02600794d37521f592", null ],
+    [ "sparse_min_state", "structSparseTsetlinMachine.html#ab095130c9d1fd2f7b8bc77387ceacdad", null ],
+    [ "ta_state", "structSparseTsetlinMachine.html#a478e3446a33c182d93516e37fe517212", null ],
+    [ "threshold", "structSparseTsetlinMachine.html#a5df80c66291c38a151ed3e79b978c57f", null ],
+    [ "votes", "structSparseTsetlinMachine.html#ae1d9d105b243feb6500ecc848bcdec39", null ],
+    [ "weights", "structSparseTsetlinMachine.html#a98c91c1ac91b1093134dfc6cb0310dfc", null ],
+    [ "y_element_size", "structSparseTsetlinMachine.html#a5afdcacd4d812728392f67091ea47cff", null ],
+    [ "y_eq", "structSparseTsetlinMachine.html#a2767c58458b73d6c59fdf1bc5bf450e3", null ],
+    [ "y_size", "structSparseTsetlinMachine.html#a0a3d15f658c0d26f6e1ef3aeb222f0a6", null ]
+];
