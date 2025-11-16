@@ -4,18 +4,43 @@
 #include "fast_prng.h"
 
 
-// --- Sparse Tsetlin Machine ---
+/** @file sparse_tsetlin_machine.h
+ *  @brief Public API for the sparse Tsetlin Machine implementation.
+ */
 
-// Linked list node for Tsetlin Automaton states
+/** @brief Linked list node used to store (ta_id, state) pairs for sparse clauses.
+ */
 struct TAStateNode {
-	uint32_t ta_id;
+    uint32_t ta_id;
     int8_t ta_state;
     struct TAStateNode *next;
 };
+
+/**
+ * @brief Insert a TAStateNode into a linked list of TAStateNode.
+ *
+ * @param head_ptr Pointer to the head pointer of the list.
+ * @param prev Node after which to insert (NULL inserts at head).
+ * @param ta_id Identifier of the automaton to insert.
+ * @param ta_state Initial state for the node.
+ * @param result If non-NULL, set to the inserted node.
+ */
 void ta_state_insert(struct TAStateNode **head_ptr, struct TAStateNode *prev, uint32_t ta_id, uint8_t ta_state, struct TAStateNode **result);
+
+/**
+ * @brief Remove a TAStateNode from a linked list.
+ *
+ * @param head_ptr Pointer to the head pointer of the list.
+ * @param prev Node before the one to remove (NULL removes head).
+ * @param result If non-NULL, set to the node following the removed node.
+ */
 void ta_state_remove(struct TAStateNode **head_ptr, struct TAStateNode *prev, struct TAStateNode **result);
 
-// Don't create, modify or free this struct directly, use stm_create, stm_free, etc.
+/**
+ * @brief Sparse Tsetlin Machine internal state.
+ *
+ * Don't create, modify or free this struct directly; use stm_create, stm_free, etc.
+ */
 struct SparseTsetlinMachine {
     uint32_t num_classes;
     uint32_t threshold;

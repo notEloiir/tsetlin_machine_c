@@ -8,10 +8,12 @@
 #include "utility.h"
 
 
-// Insert a new node into a linked list after prev
-// If prev is NULL, insert at the head of the list
-// If head_ptr is NULL, it will be initialized to the new node
-// If result is not NULL, it will point to the new node
+/**
+ * @brief Insert a TAStateNode into a clause linked-list.
+ *
+ * If prev is NULL the node is inserted at the head. On allocation failure
+ * the function prints an error and exits.
+ */
 void ta_state_insert(struct TAStateNode **head_ptr, struct TAStateNode *prev, uint32_t ta_id, uint8_t ta_state, struct TAStateNode **result) {
 	struct TAStateNode *node = malloc(sizeof(struct TAStateNode));
 	if (node == NULL) {
@@ -38,11 +40,12 @@ void ta_state_insert(struct TAStateNode **head_ptr, struct TAStateNode *prev, ui
 	}
 }
 
-// Remove a node from a linked list after prev
-// If prev is NULL, remove the head of the list
-// If head_ptr is NULL, it will not be modified but print an error message
-// If prev is not NULL and prev->next is NULL (trying to remove after last node), nothing happens
-// If result is not NULL, it will point to the next node after the removed node
+/**
+ * @brief Remove a node from a clause linked-list.
+ *
+ * If prev is NULL the head is removed. If the list is empty the function
+ * prints a diagnostic message and returns.
+ */
 void ta_state_remove(struct TAStateNode **head_ptr, struct TAStateNode *prev, struct TAStateNode **result) {
 	if (*head_ptr == NULL) {
         fprintf(stderr, "Trying to remove from empty linked list\n");
@@ -72,8 +75,9 @@ void ta_state_remove(struct TAStateNode **head_ptr, struct TAStateNode *prev, st
 }
 
 
-// --- Basic y_eq function ---
-
+/**
+ * @brief Generic equality comparator for sparse TsetlinMachine outputs.
+ */
 uint8_t stm_y_eq_generic(const struct SparseTsetlinMachine *stm, const void *y, const void *y_pred) {
     return 0 == memcmp(y, y_pred, stm->y_size * stm->y_element_size);
 }
@@ -81,15 +85,26 @@ uint8_t stm_y_eq_generic(const struct SparseTsetlinMachine *stm, const void *y, 
 
 // --- Tsetlin Machine ---
 
+/**
+ * @brief Initialize internal structures for a sparse TsetlinMachine.
+ */
 void stm_initialize(struct SparseTsetlinMachine *stm);
+
+/**
+ * @brief Clear all clause linked-lists and free nodes.
+ */
 static inline void stm_clear_llists(struct SparseTsetlinMachine *stm);
 
-// Translates automaton state to action - 0 or 1
+/**
+ * @brief Translate automaton state to action bit (include/exclude).
+ */
 static inline uint8_t action(int8_t state, int8_t mid_state) {
     return state >= mid_state;
 }
 
-// Allocate memory, fill in fields, calls stm_initialize
+/**
+ * @brief Create and allocate a SparseTsetlinMachine instance.
+ */
 struct SparseTsetlinMachine *stm_create(
     uint32_t num_classes, uint32_t threshold, uint32_t num_literals, uint32_t num_clauses,
     int8_t max_state, int8_t min_state, uint8_t boost_true_positive_feedback,
@@ -164,7 +179,9 @@ struct SparseTsetlinMachine *stm_create(
 }
 
 
-// Load Tsetlin Machine from a bin file
+/**
+ * @brief Load a sparse TsetlinMachine from a binary file.
+ */
 struct SparseTsetlinMachine *stm_load_dense(
     const char *filename, uint32_t y_size, uint32_t y_element_size
 ) {
@@ -249,7 +266,9 @@ struct SparseTsetlinMachine *stm_load_dense(
 }
 
 
-// Save Tsetlin Machine to a bin file
+/**
+ * @brief Save a sparse TsetlinMachine to a binary file.
+ */
 void stm_save(const struct SparseTsetlinMachine *stm, const char *filename) {
     FILE *file = fopen(filename, "wb");
     if (!file) {
@@ -338,6 +357,9 @@ save_error:
 }
 
 
+/**
+ * @brief Clear and free all clause linked-lists in a sparse TsetlinMachine.
+ */
 static inline void stm_clear_llists(struct SparseTsetlinMachine *stm) {
 	for (uint32_t clause_id = 0; clause_id < stm->num_clauses; clause_id++) {
 		struct TAStateNode **head_ptr = stm->ta_state + clause_id;
@@ -347,7 +369,9 @@ static inline void stm_clear_llists(struct SparseTsetlinMachine *stm) {
     }
 }
 
-// Free all allocated memory
+/**
+ * @brief Free a SparseTsetlinMachine and all associated memory.
+ */
 void stm_free(struct SparseTsetlinMachine *stm) {
     if (stm != NULL){
     	if (stm->ta_state != NULL) {
@@ -383,7 +407,9 @@ void stm_free(struct SparseTsetlinMachine *stm) {
 }
 
 
-// Initialize values
+/**
+ * @brief Initialize sparse machine internal fields and weights.
+ */
 void stm_initialize(struct SparseTsetlinMachine *stm) {
     stm->mid_state = (stm->max_state + stm->min_state) / 2;
     stm->sparse_min_state = stm->mid_state - 40;
@@ -405,9 +431,9 @@ void stm_initialize(struct SparseTsetlinMachine *stm) {
     }
 }
 
-// Calculate the output of each clause using the actions of each Tsetlin Automaton
-// Meaning: which clauses are active for given input
-// Output is stored an internal output array clause_output
+/**
+ * @brief Compute clause outputs for sparse machine using linked-list representation.
+ */
 static inline void calculate_clause_output(struct SparseTsetlinMachine *stm, const uint8_t *X, uint8_t skip_empty) {
     // For each clause, check if it is "active" - all necessary literals have the right value
     for (uint32_t clause_id = 0; clause_id < stm->num_clauses; clause_id++) {
@@ -436,7 +462,9 @@ static inline void calculate_clause_output(struct SparseTsetlinMachine *stm, con
 }
 
 
-// Sum up the votes of each clause for each class
+/**
+ * @brief Sum clause votes into class votes and clip to threshold (sparse).
+ */
 static inline void sum_votes(struct SparseTsetlinMachine *stm) {
     memset(stm->votes, 0, stm->num_classes*sizeof(int32_t));
     
@@ -464,6 +492,9 @@ static inline void sum_votes(struct SparseTsetlinMachine *stm) {
 // Meaning: it's active and voted correctly
 // Action: reinforce the clause TAs and weights
 // Intuition: so that it continues to vote for the same class
+/**
+ * @brief Apply Type I-a feedback for sparse machine.
+ */
 void type_1a_feedback(struct SparseTsetlinMachine *stm, const uint8_t *X, uint32_t clause_id, uint32_t class_id) {
     // float s_inv = 1.0f / stm->s;
     // float s_min1_inv = (stm->s - 1.0f) / stm->s;
@@ -531,6 +562,9 @@ void type_1a_feedback(struct SparseTsetlinMachine *stm, const uint8_t *X, uint32
 // Meaning: it's inactive but would have voted correctly
 // Action: lower the clause TAs, both positive and negative, towards exclusion
 // Intuition: so that it "finds something else to do", "countering force"
+/**
+ * @brief Apply Type I-b feedback for sparse machine.
+ */
 void type_1b_feedback(struct SparseTsetlinMachine *stm, uint32_t clause_id) {
     // float s_inv = 1.0f / stm->s;
 
@@ -570,6 +604,9 @@ void type_1b_feedback(struct SparseTsetlinMachine *stm, uint32_t clause_id) {
 // Action: raise excluded clause TAs that could deactivate the clause is included (towards inclusion)
 // and punish the clause weight (towards zero)
 // Intuition: either fix the weight or exclude the clause, whichever is easier
+/**
+ * @brief Apply Type II feedback for sparse machine.
+ */
 void type_2_feedback(struct SparseTsetlinMachine *stm, const uint8_t *X, uint32_t clause_id, uint32_t class_id) {
     uint8_t feedback_strength = 1;
 
@@ -611,6 +648,9 @@ void type_2_feedback(struct SparseTsetlinMachine *stm, const uint8_t *X, uint32_
 }
 
 
+/**
+ * @brief Train a sparse TsetlinMachine on a dataset.
+ */
 void stm_train(struct SparseTsetlinMachine *stm, const uint8_t *X, const void *y, uint32_t rows, uint32_t epochs) {
     for (uint32_t epoch = 0; epoch < epochs; epoch++) {
 		for (uint32_t row = 0; row < rows; row++) {
@@ -631,8 +671,9 @@ void stm_train(struct SparseTsetlinMachine *stm, const uint8_t *X, const void *y
 }
 
 
-// Inference
-// y_pred should be allocated like: void *y_pred = malloc(rows * stm->y_size * stm->y_element_size);
+/**
+ * @brief Perform inference with a sparse TsetlinMachine.
+ */
 void stm_predict(struct SparseTsetlinMachine *stm, const uint8_t *X, void *y_pred, uint32_t rows) {
     for (uint32_t row = 0; row < rows; row++) {
     	const uint8_t* X_row = X + (row * stm->num_literals);
@@ -650,8 +691,9 @@ void stm_predict(struct SparseTsetlinMachine *stm, const uint8_t *X, void *y_pre
 }
 
 
-// Example evaluation function
-// Compares predicted labels with true labels and prints accuracy
+/**
+ * @brief Evaluate sparse model accuracy on a dataset and print result.
+ */
 void stm_evaluate(struct SparseTsetlinMachine *stm, const uint8_t *X, const void *y, uint32_t rows) {
     uint32_t correct = 0;
     uint32_t total = 0;
@@ -680,8 +722,9 @@ void stm_evaluate(struct SparseTsetlinMachine *stm, const uint8_t *X, const void
 
 // --- Basic output_activation functions ---
 
-// Return the index of the class with the highest vote
-// Basic maxarg
+/**
+ * @brief Output activation returning the class index with highest vote (sparse).
+ */
 void stm_oa_class_idx(const struct SparseTsetlinMachine *stm, const void *y_pred) {
     if (stm->y_size != 1) {
         fprintf(stderr, "y_eq_class_idx expects y_size == 1");
@@ -702,8 +745,9 @@ void stm_oa_class_idx(const struct SparseTsetlinMachine *stm, const void *y_pred
     *label_pred = best_class;
 }
 
-// Return a binary vector based on votes for each class
-// Basic binary thresholding (k=mid_state)
+/**
+ * @brief Output activation producing per-class binary predictions (sparse).
+ */
 void stm_oa_bin_vector(const struct SparseTsetlinMachine *stm, const void *y_pred) {
     if(stm->y_size != stm->num_classes) {
         fprintf(stderr, "y_eq_bin_vector expects y_size == tm->num_classes");
@@ -718,7 +762,9 @@ void stm_oa_bin_vector(const struct SparseTsetlinMachine *stm, const void *y_pre
 }
 
 
-// Set the output activation function for the Tsetlin Machine
+/**
+ * @brief Set a custom output activation function for sparse machine.
+ */
 void stm_set_output_activation(
     struct SparseTsetlinMachine *stm,
     void (*output_activation)(const struct SparseTsetlinMachine *stm, const void *y_pred)
@@ -727,8 +773,9 @@ void stm_set_output_activation(
 }
 
 
-// Internal component of feedback functions below
-// Intuition for the choice is in comments above, for each type_*_feedback function
+/**
+ * @brief Decide and apply appropriate feedback for a clause/class pair (sparse).
+ */
 void stm_apply_feedback(struct SparseTsetlinMachine *stm, uint32_t clause_id, uint32_t class_id, uint8_t is_class_positive, const uint8_t *X) {
 	uint8_t is_vote_positive = stm->weights[(clause_id * stm->num_classes) + class_id] >= 0;
 	if (is_vote_positive == is_class_positive) {
@@ -747,6 +794,9 @@ void stm_apply_feedback(struct SparseTsetlinMachine *stm, uint32_t clause_id, ui
 // --- calculate_feedback ---
 // Calculate clause-class feedback
 
+/**
+ * @brief Calculate feedback when label is provided as a class index (sparse).
+ */
 void stm_feedback_class_idx(struct SparseTsetlinMachine *stm, const uint8_t *X, const void *y) {
     // Pick positive and negative classes based on the label:
     // Positive class is the one that matches the label,
@@ -798,6 +848,9 @@ void stm_feedback_class_idx(struct SparseTsetlinMachine *stm, const uint8_t *X, 
     }
 }
 
+/**
+ * @brief Calculate feedback when label is provided as a binary vector (sparse).
+ */
 void stm_feedback_bin_vector(struct SparseTsetlinMachine *stm, const uint8_t *X, const void *y) {
     // Pick positive and negative classes based on the label:
     // Positive is randomly chosen from the ones that matches the label, weighted by votes,

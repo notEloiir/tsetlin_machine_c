@@ -3,17 +3,40 @@
 #include <stdint.h>
 
 
-// --- Stateless (Sparse) Tsetlin Machine ---
+/** @file stateless_tsetlin_machine.h
+ *  @brief Public API for the stateless (pruned) Tsetlin Machine.
+ */
 
-// Linked list node for Tsetlin Automaton ids (without state)
+/** @brief Linked list node storing only TA identifiers for stateless machines.
+ */
 struct TANode {
-	uint32_t ta_id;
+    uint32_t ta_id;
     struct TANode *next;
 };
+/**
+ * @brief Insert a TANode into the linked list.
+ *
+ * @param head_ptr Pointer to head pointer.
+ * @param prev Node after which to insert (NULL inserts at head).
+ * @param ta_id ID to insert.
+ * @param result If non-NULL, set to inserted node.
+ */
 void ta_stateless_insert(struct TANode **head_ptr, struct TANode *prev, uint32_t ta_id, struct TANode **result);
+
+/**
+ * @brief Remove a TANode from the linked list.
+ *
+ * @param head_ptr Pointer to head pointer.
+ * @param prev Node before the one to remove (NULL removes head).
+ * @param result If non-NULL, set to node following removed node.
+ */
 void ta_stateless_remove(struct TANode **head_ptr, struct TANode *prev, struct TANode **result);
 
-// Don't create, modify or free this struct directly, use sltm_load_dense, stm_free, etc.
+/**
+ * @brief Stateless (pruned) Tsetlin Machine internal state.
+ *
+ * Don't create, modify or free this struct directly; use the provided helpers.
+ */
 struct StatelessTsetlinMachine {
     uint32_t num_classes;
     uint32_t threshold;
