@@ -1,0 +1,43 @@
+
+PROJECT_NAME           = "tsetlin_machine_c"
+OUTPUT_DIRECTORY       = docs
+CREATE_SUBDIRS         = NO
+OUTPUT_LANGUAGE        = English
+
+# Increase extraction so private/static symbols are included for completeness
+EXTRACT_ALL            = YES
+EXTRACT_STATIC         = YES
+EXTRACT_PRIVATE        = YES
+
+# Input
+INPUT                  = src/tsetlin_machine_c/include src/tsetlin_machine_c/src
+FILE_PATTERNS          = *.c *.h
+RECURSIVE              = YES
+STRIP_FROM_PATH        = src
+
+# Generate HTML, disable LaTeX by default
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+GENERATE_LATEX         = NO
+GENERATE_XML           = NO
+GENERATE_RTF           = NO
+GENERATE_DOCSET        = NO
+
+# Source browser and treeview
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = YES
+GENERATE_TREEVIEW      = YES
+
+# Warnings and verbosity
+QUIET                  = NO
+WARNINGS               = YES
+
+# Markdown and dot support
+MARKDOWN_SUPPORT       = YES
+HAVE_DOT               = NO
+
+# Misc
+BRIEF_MEMBER_DESC      = YES
+REPEAT_BRIEF           = YES
+ALIASES                =
+

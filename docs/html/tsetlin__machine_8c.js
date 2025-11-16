@@ -1,0 +1,25 @@
+var tsetlin__machine_8c =
+[
+    [ "action", "tsetlin__machine_8c.html#ad2ce2121f136290a0c4898d85f1e7daa", null ],
+    [ "calculate_clause_output", "tsetlin__machine_8c.html#abd3b41eb35f2123464ff8c2434a187e9", null ],
+    [ "sum_votes", "tsetlin__machine_8c.html#acd15269f3319be6fb3eb059620e09059", null ],
+    [ "tm_apply_feedback", "tsetlin__machine_8c.html#ad592a2e59c0e7df77605d528283ab2fa", null ],
+    [ "tm_create", "tsetlin__machine_8c.html#acb0fd87c3212f910fe13303ed2f7fe48", null ],
+    [ "tm_evaluate", "tsetlin__machine_8c.html#a4281eb51a0c7187bc7d89faee82a58e8", null ],
+    [ "tm_feedback_bin_vector", "tsetlin__machine_8c.html#abf435bc72943ce9d89de46d5b08af1fb", null ],
+    [ "tm_feedback_class_idx", "tsetlin__machine_8c.html#a2876bf016a161c50e1c39af95915719d", null ],
+    [ "tm_free", "tsetlin__machine_8c.html#a363fb2e9b4350758695d086b0fe045b5", null ],
+    [ "tm_initialize", "tsetlin__machine_8c.html#ac8c3a938b4c6a955d41e06b65e35a6e1", null ],
+    [ "tm_load", "tsetlin__machine_8c.html#a856ee86858bdd0ca42789b646a80cdd1", null ],
+    [ "tm_oa_bin_vector", "tsetlin__machine_8c.html#abef69480d76667bf2cca8a0723d95a0c", null ],
+    [ "tm_oa_class_idx", "tsetlin__machine_8c.html#a60b873dbad1d30bbfb8e30cb2d4b5b8e", null ],
+    [ "tm_predict", "tsetlin__machine_8c.html#ae4b635a4bc1f98dcd10071b08e4dcc70", null ],
+    [ "tm_save", "tsetlin__machine_8c.html#a4e19916a2a4e75909f3ac85c9b8eeded", null ],
+    [ "tm_set_calculate_feedback", "tsetlin__machine_8c.html#abd1d1c474cd37b4bb8ecb261d8018277", null ],
+    [ "tm_set_output_activation", "tsetlin__machine_8c.html#a4215731794442fec203beb5bcd21e130", null ],
+    [ "tm_train", "tsetlin__machine_8c.html#a1191ee87ed00405d7cb431854c3172d8", null ],
+    [ "tm_y_eq_generic", "tsetlin__machine_8c.html#a3929d59fa257c0bb119cc3fa6c2b2546", null ],
+    [ "type_1a_feedback", "tsetlin__machine_8c.html#afa0f90ad2fe41dd983dd629233a6ddd0", null ],
+    [ "type_1b_feedback", "tsetlin__machine_8c.html#ae5bec68545874f86e9a9975eda2621fa", null ],
+    [ "type_2_feedback", "tsetlin__machine_8c.html#aa26d0279ad007d60486c3488904a6f17", null ]
+];

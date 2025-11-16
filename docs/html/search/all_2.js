@@ -1,0 +1,7 @@
+var searchData=
+[
+  ['calculate_5fclause_5foutput_4',['calculate_clause_output',['../sparse__tsetlin__machine_8c.html#ab7dd2b5e296567d171db412bd13cb336',1,'calculate_clause_output(struct SparseTsetlinMachine *stm, const uint8_t *X, uint8_t skip_empty):&#160;sparse_tsetlin_machine.c'],['../stateless__tsetlin__machine_8c.html#ab2273324697009fab9379c93c8b922c1',1,'calculate_clause_output(struct StatelessTsetlinMachine *sltm, const uint8_t *X):&#160;stateless_tsetlin_machine.c'],['../tsetlin__machine_8c.html#abd3b41eb35f2123464ff8c2434a187e9',1,'calculate_clause_output(struct TsetlinMachine *tm, const uint8_t *X, uint8_t skip_empty):&#160;tsetlin_machine.c']]],
+  ['calculate_5ffeedback_5',['calculate_feedback',['../structSparseTsetlinMachine.html#acc7e11a36af44f64884d8645f3845abc',1,'SparseTsetlinMachine::calculate_feedback()'],['../structTsetlinMachine.html#aba58b14aff2e8b028ce9322f8b78d55c',1,'TsetlinMachine::calculate_feedback()']]],
+  ['clause_5foutput_6',['clause_output',['../structSparseTsetlinMachine.html#adfadaf3bbe696f7e996af4d0e482c915',1,'SparseTsetlinMachine::clause_output()'],['../structStatelessTsetlinMachine.html#a98b2a1f3ea3f8f6a9ea7865bca1f0709',1,'StatelessTsetlinMachine::clause_output()'],['../structTsetlinMachine.html#abedcbe47ec07649d17a4f769bb452c22',1,'TsetlinMachine::clause_output()']]],
+  ['clip_7',['clip',['../utility_8h.html#a471b1e94a68dce42ef434f34c1e06f7f',1,'utility.h']]]
+];
