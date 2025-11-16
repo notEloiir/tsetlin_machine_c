@@ -8,10 +8,12 @@
 #include "utility.h"
 
 
-// Insert a new node into a linked list after prev
-// If prev is NULL, insert at the head of the list
-// If head_ptr is NULL, it will be initialized to the new node
-// If result is not NULL, it will point to the new node
+/**
+ * @brief Insert a TANode into a linked list.
+ *
+ * If prev is NULL the node is inserted at the head. On allocation failure
+ * the function prints an error and exits the program.
+ */
 void ta_stateless_insert(struct TANode **head_ptr, struct TANode *prev, uint32_t ta_id, struct TANode **result) {
 	struct TANode *node = malloc(sizeof(struct TANode));
 	if (node == NULL) {
@@ -37,11 +39,12 @@ void ta_stateless_insert(struct TANode **head_ptr, struct TANode *prev, uint32_t
 	}
 }
 
-// Remove a node from a linked list after prev
-// If prev is NULL, remove the head of the list
-// If head_ptr is NULL, it will not be modified but print an error message
-// If prev is not NULL and prev->next is NULL (trying to remove after last node), nothing happens
-// If result is not NULL, it will point to the next node after the removed node
+/**
+ * @brief Remove a TANode from a linked list.
+ *
+ * If prev is NULL the head is removed. If the list is empty the function
+ * prints a diagnostic and returns.
+ */
 void ta_stateless_remove(struct TANode **head_ptr, struct TANode *prev, struct TANode **result) {
 	if (*head_ptr == NULL) {
         fprintf(stderr, "Trying to remove from empty linked list\n");
@@ -71,8 +74,11 @@ void ta_stateless_remove(struct TANode **head_ptr, struct TANode *prev, struct T
 }
 
 
-// --- Basic y_eq function ---
-
+/**
+ * @brief Generic comparator for stateless machine outputs.
+ *
+ * Compares raw bytes of y and y_pred using the configured element size.
+ */
 uint8_t sltm_y_eq_generic(const struct StatelessTsetlinMachine *sltm, const void *y, const void *y_pred) {
     return 0 == memcmp(y, y_pred, sltm->y_size * sltm->y_element_size);
 }
@@ -80,10 +86,22 @@ uint8_t sltm_y_eq_generic(const struct StatelessTsetlinMachine *sltm, const void
 
 // --- Tsetlin Machine ---
 
+/**
+ * @brief Initialize a stateless machine's internal derived fields.
+ * @param sltm Pointer to the stateless machine.
+ */
 void sltm_initialize(struct StatelessTsetlinMachine *sltm);
+
+/**
+ * @brief Free all clause linked-lists in a stateless machine.
+ */
 inline static void sltm_free_state_llists(struct StatelessTsetlinMachine *sltm);
 
-// Allocate memory, fill in fields, calls sltm_initialize
+/**
+ * @brief Allocate and initialize a StatelessTsetlinMachine instance.
+ *
+ * @return Pointer to the created instance or NULL on allocation failure.
+ */
 struct StatelessTsetlinMachine *sltm_create(
     uint32_t num_classes, uint32_t threshold, uint32_t num_literals, uint32_t num_clauses,
     int8_t max_state, int8_t min_state, uint8_t boost_true_positive_feedback,
@@ -145,13 +163,21 @@ struct StatelessTsetlinMachine *sltm_create(
     return sltm;
 }
 
-// Translates automaton state to action - 0 or 1
+/**
+ * @brief Convert automaton state to action bit (include/exclude literal).
+ */
 static inline uint8_t action(int8_t state, int8_t mid_state) {
     return state >= mid_state;
 }
 
 
-// Load Tsetlin Machine from a bin file of a dense (normal, vanilla) Tsetlin Machine
+/**
+ * @brief Load a stateless machine by reading a dense TM binary and pruning.
+ * @param filename Path to binary file created by a dense TM save.
+ * @param y_size Output vector size per-row.
+ * @param y_element_size Output element size in bytes.
+ * @return Newly allocated StatelessTsetlinMachine or NULL on error.
+ */
 struct StatelessTsetlinMachine *sltm_load_dense(
     const char *filename, uint32_t y_size, uint32_t y_element_size
 ) {
@@ -235,6 +261,9 @@ struct StatelessTsetlinMachine *sltm_load_dense(
 }
 
 
+/**
+ * @brief Save a stateless machine to a binary file.
+ */
 void sltm_save(const struct StatelessTsetlinMachine *sltm, const char *filename) {
     FILE *file = fopen(filename, "wb");
     if (!file) {
@@ -319,6 +348,9 @@ save_error:
 
 
 
+/**
+ * @brief Free all state linked-lists held by a stateless machine.
+ */
 inline static void sltm_free_state_llists(struct StatelessTsetlinMachine *sltm) {
 	for (uint32_t clause_id = 0; clause_id < sltm->num_clauses; clause_id++) {
 		struct TANode **head_ptr = sltm->ta_state + clause_id;
@@ -328,7 +360,9 @@ inline static void sltm_free_state_llists(struct StatelessTsetlinMachine *sltm) 
 	}
 }
 
-// Free all allocated memory
+/**
+ * @brief Free a StatelessTsetlinMachine and its resources.
+ */
 void sltm_free(struct StatelessTsetlinMachine *sltm) {
     if (sltm != NULL){
         if (sltm->ta_state != NULL) {
@@ -359,16 +393,18 @@ void sltm_free(struct StatelessTsetlinMachine *sltm) {
 }
 
 
-// Initialize values
+/**
+ * @brief Initialize derived fields for a stateless machine (mid_state, s_inv, etc.).
+ */
 void sltm_initialize(struct StatelessTsetlinMachine *sltm) {
     sltm->mid_state = (sltm->max_state + sltm->min_state) / 2;
     sltm->s_inv = 1.0f / sltm->s;
     sltm->s_min1_inv = (sltm->s - 1.0f) / sltm->s;
 }
 
-// Calculate the output of each clause using the actions of each Tsetlin Automaton
-// Meaning: which clauses are active for given input
-// Output is stored an internal output array clause_output
+/**
+ * @brief Compute clause outputs for a single input row (stateless machine).
+ */
 static inline void calculate_clause_output(struct StatelessTsetlinMachine *sltm, const uint8_t *X) {
     // For each clause, check if it is "active" - all necessary literals have the right value
     for (uint32_t clause_id = 0; clause_id < sltm->num_clauses; clause_id++) {
@@ -395,7 +431,9 @@ static inline void calculate_clause_output(struct StatelessTsetlinMachine *sltm,
 }
 
 
-// Sum up the votes of each clause for each class
+/**
+ * @brief Sum clause votes into class votes and clip to threshold (stateless).
+ */
 static inline void sum_votes(struct StatelessTsetlinMachine *sltm) {
     memset(sltm->votes, 0, sltm->num_classes*sizeof(int32_t));
     
@@ -416,8 +454,13 @@ static inline void sum_votes(struct StatelessTsetlinMachine *sltm) {
 }
 
 
-// Inference
-// y_pred should be allocated like: void *y_pred = malloc(rows * sltm->y_size * sltm->y_element_size);
+/**
+ * @brief Run inference with a stateless machine.
+ * @param sltm Pointer to the stateless machine.
+ * @param X Input data buffer (rows x num_literals).
+ * @param y_pred Preallocated output buffer.
+ * @param rows Number of input rows.
+ */
 void sltm_predict(struct StatelessTsetlinMachine *sltm, const uint8_t *X, void *y_pred, uint32_t rows) {
     for (uint32_t row = 0; row < rows; row++) {
     	const uint8_t* X_row = X + (row * sltm->num_literals);
@@ -435,8 +478,9 @@ void sltm_predict(struct StatelessTsetlinMachine *sltm, const uint8_t *X, void *
 }
 
 
-// Example evaluation function
-// Compares predicted labels with true labels and prints accuracy
+/**
+ * @brief Evaluate predictions on a dataset and print accuracy (stateless).
+ */
 void sltm_evaluate(struct StatelessTsetlinMachine *sltm, const uint8_t *X, const void *y, uint32_t rows) {
     uint32_t correct = 0;
     uint32_t total = 0;
@@ -465,8 +509,9 @@ void sltm_evaluate(struct StatelessTsetlinMachine *sltm, const uint8_t *X, const
 
 // --- Basic output_activation functions ---
 
-// Return the index of the class with the highest vote
-// Basic maxarg
+/**
+ * @brief Output activation returning the class index with highest vote.
+ */
 void sltm_oa_class_idx(const struct StatelessTsetlinMachine *sltm, const void *y_pred) {
     if (sltm->y_size != 1) {
         fprintf(stderr, "y_eq_class_idx expects y_size == 1");
@@ -487,8 +532,9 @@ void sltm_oa_class_idx(const struct StatelessTsetlinMachine *sltm, const void *y
     *label_pred = best_class;
 }
 
-// Return a binary vector based on votes for each class
-// Basic binary thresholding (k=mid_state)
+/**
+ * @brief Output activation producing a per-class binary vector using mid_state.
+ */
 void sltm_oa_bin_vector(const struct StatelessTsetlinMachine *sltm, const void *y_pred) {
     if(sltm->y_size != sltm->num_classes) {
         fprintf(stderr, "y_eq_bin_vector expects y_size == tm->num_classes");

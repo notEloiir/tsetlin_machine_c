@@ -12,8 +12,15 @@
 #endif
 
 
-// --- Basic y_eq function ---
-
+/**
+ * @brief Generic equality comparator for outputs.
+ *
+ * Compares raw memory of y and y_pred assuming trivially copyable elements.
+ * @param tm Pointer to TsetlinMachine (used for y_size/y_element_size).
+ * @param y Pointer to ground-truth output.
+ * @param y_pred Pointer to predicted output.
+ * @return 1 if equal, 0 otherwise.
+ */
 uint8_t tm_y_eq_generic(const struct TsetlinMachine *tm, const void *y, const void *y_pred) {
     return 0 == memcmp(y, y_pred, tm->y_size * tm->y_element_size);
 }
@@ -21,9 +28,18 @@ uint8_t tm_y_eq_generic(const struct TsetlinMachine *tm, const void *y, const vo
 
 // --- Tsetlin Machine ---
 
+/**
+ * @brief Initialize non-trivial fields of a TsetlinMachine after allocation.
+ * @param tm Pointer to the TsetlinMachine to initialize.
+ */
 void tm_initialize(struct TsetlinMachine *tm);
 
-// Allocate memory, fill in fields, calls tm_initialize
+/**
+ * @brief Create and allocate a TsetlinMachine instance.
+ *
+ * Allocates internal arrays and seeds the PRNG. On failure NULL is returned
+ * and errno/diagnostic messages may be printed.
+ */
 struct TsetlinMachine *tm_create(
     uint32_t num_classes, uint32_t threshold, uint32_t num_literals, uint32_t num_clauses,
     int8_t max_state, int8_t min_state, uint8_t boost_true_positive_feedback,
@@ -91,7 +107,14 @@ struct TsetlinMachine *tm_create(
 }
 
 
-// Load Tsetlin Machine from a bin file
+/**
+ * @brief Load a TsetlinMachine from a binary file produced by tm_save.
+ *
+ * @param filename Path to binary file.
+ * @param y_size Output vector size per-row.
+ * @param y_element_size Size of each element in y (in bytes).
+ * @return Newly allocated TsetlinMachine or NULL on error.
+ */
 struct TsetlinMachine *tm_load(
     const char *filename, uint32_t y_size, uint32_t y_element_size
 ) {
@@ -162,7 +185,11 @@ struct TsetlinMachine *tm_load(
 }
 
 
-// Save Tsetlin Machine to a bin file
+/**
+ * @brief Save a TsetlinMachine instance to a binary file.
+ * @param tm Pointer to the TsetlinMachine to save.
+ * @param filename Path to the output file.
+ */
 void tm_save(const struct TsetlinMachine *tm, const char *filename) {
     FILE *file = fopen(filename, "wb");
     if (!file) {
@@ -420,7 +447,10 @@ void tm_save_fbs(struct TsetlinMachine *tm, const char *filename) {
 #endif
 
 
-// Free all allocated memory
+/**
+ * @brief Free a TsetlinMachine and all internally allocated memory.
+ * @param tm Pointer to the instance to free (may be NULL).
+ */
 void tm_free(struct TsetlinMachine *tm) {
     if (tm != NULL){
         if (tm->ta_state != NULL) {
@@ -450,7 +480,10 @@ void tm_free(struct TsetlinMachine *tm) {
 }
 
 
-// Initialize values
+/**
+ * @brief Initialize automata states and weights for a new TsetlinMachine.
+ * @param tm Pointer to the TsetlinMachine to initialize.
+ */
 void tm_initialize(struct TsetlinMachine *tm) {
     tm->mid_state = (tm->max_state + tm->min_state) / 2;
     tm->s_inv = 1.0f / tm->s;
@@ -480,14 +513,23 @@ void tm_initialize(struct TsetlinMachine *tm) {
     }
 }
 
-// Translates automaton state to action - 0 or 1
+/**
+ * @brief Translate automaton state to action (include/exclude literal).
+ * @param state Automaton state.
+ * @param mid_state Midpoint state used as threshold.
+ * @return 1 if automaton action is 'include', 0 otherwise.
+ */
 static inline uint8_t action(int8_t state, int8_t mid_state) {
     return state >= mid_state;
 }
 
-// Calculate the output of each clause using the actions of each Tsetlin Automaton
-// Meaning: which clauses are active for given input
-// Output is stored inside an internal output array clause_output
+/**
+ * @brief Compute clause outputs for a single input vector.
+ *
+ * Each clause is evaluated against the input X and an internal boolean
+ * clause_output array is filled in. If skip_empty is non-zero, empty
+ * clauses are treated as inactive.
+ */
 static inline void calculate_clause_output(struct TsetlinMachine *tm, const uint8_t *X, uint8_t skip_empty) {
     // For each clause, check if it is "active" - all necessary literals have the right value
     for (uint32_t clause_id = 0; clause_id < tm->num_clauses; clause_id++) {
@@ -516,7 +558,10 @@ static inline void calculate_clause_output(struct TsetlinMachine *tm, const uint
 }
 
 
-// Sum up the votes of each clause for each class
+/**
+ * @brief Sum clause votes into class votes and clip to threshold.
+ * @param tm Pointer to the TsetlinMachine.
+ */
 static inline void sum_votes(struct TsetlinMachine *tm) {
     memset(tm->votes, 0, tm->num_classes*sizeof(int32_t));
     
@@ -537,6 +582,12 @@ static inline void sum_votes(struct TsetlinMachine *tm) {
 }
 
 
+/**
+ * @name Feedback helpers
+ * Internal helper functions implementing Type I and Type II feedback.
+ */
+/*@{*/
+
 // Type I Feedback
 // Applied if clause at clause_id voted correctly for class at class_id
 
@@ -544,6 +595,9 @@ static inline void sum_votes(struct TsetlinMachine *tm) {
 // Meaning: it's active and voted correctly
 // Action: reinforce the clause TAs and weights
 // Intuition: so that it continues to vote for the same class
+/**
+ * @brief Apply Type I-a feedback to a clause-class pair.
+ */
 static inline void type_1a_feedback(struct TsetlinMachine *tm, const uint8_t *X, uint32_t clause_id, uint32_t class_id) {
     // float s_inv = 1.0f / tm->s;
     // float s_min1_inv = (tm->s - 1.0f) / tm->s;
@@ -590,6 +644,9 @@ static inline void type_1a_feedback(struct TsetlinMachine *tm, const uint8_t *X,
 // Meaning: it's inactive but would have voted correctly
 // Action: lower the clause TAs, both positive and negative, towards exclusion
 // Intuition: so that it "finds something else to do", "countering force"
+/**
+ * @brief Apply Type I-b feedback to a clause (inactive but would vote correctly).
+ */
 static inline void type_1b_feedback(struct TsetlinMachine *tm, uint32_t clause_id) {
     // float s_inv = 1.0f / tm->s;
 
@@ -615,6 +672,9 @@ static inline void type_1b_feedback(struct TsetlinMachine *tm, uint32_t clause_i
 // Action: raise excluded clause TAs that could deactivate the clause is included (towards inclusion)
 // and punish the clause weight (towards zero)
 // Intuition: either fix the weight or exclude the clause, whichever is easier
+/**
+ * @brief Apply Type II feedback to a clause-class pair (clause voted incorrectly).
+ */
 static inline void type_2_feedback(struct TsetlinMachine *tm, const uint8_t *X, uint32_t clause_id, uint32_t class_id) {
     uint8_t feedback_strength = 1;
 
@@ -635,6 +695,15 @@ static inline void type_2_feedback(struct TsetlinMachine *tm, const uint8_t *X, 
 }
 
 
+/**
+ * @brief Train the TsetlinMachine on a dataset.
+ *
+ * @param tm Pointer to the TsetlinMachine.
+ * @param X Input matrix (rows x num_literals) of uint8_t.
+ * @param y Output labels buffer.
+ * @param rows Number of rows in X/y.
+ * @param epochs Number of training epochs (full passes over data).
+ */
 void tm_train(struct TsetlinMachine *tm, const uint8_t *X, const void *y, uint32_t rows, uint32_t epochs) {
     for (uint32_t epoch = 0; epoch < epochs; epoch++) {
 		for (uint32_t row = 0; row < rows; row++) {
@@ -655,8 +724,14 @@ void tm_train(struct TsetlinMachine *tm, const uint8_t *X, const void *y, uint32
 }
 
 
-// Inference
-// y_pred should be allocated like: void *y_pred = malloc(rows * tm->y_size * tm->y_element_size);
+/**
+ * @brief Run inference with a TsetlinMachine.
+ *
+ * @param tm Pointer to the TsetlinMachine.
+ * @param X Input matrix (rows x num_literals).
+ * @param y_pred Preallocated output buffer where predictions are written.
+ * @param rows Number of rows to predict.
+ */
 void tm_predict(struct TsetlinMachine *tm, const uint8_t *X, void *y_pred, uint32_t rows) {
     for (uint32_t row = 0; row < rows; row++) {
     	const uint8_t* X_row = X + (row * tm->num_literals);
@@ -674,8 +749,11 @@ void tm_predict(struct TsetlinMachine *tm, const uint8_t *X, void *y_pred, uint3
 }
 
 
-// Example evaluation function
-// Compares predicted labels with true labels and prints accuracy
+/**
+ * @brief Evaluate accuracy on a dataset and print results to stdout.
+ *
+ * This utility allocates a temporary prediction buffer internally.
+ */
 void tm_evaluate(struct TsetlinMachine *tm, const uint8_t *X, const void *y, uint32_t rows) {
     uint32_t correct = 0;
     uint32_t total = 0;
@@ -704,8 +782,9 @@ void tm_evaluate(struct TsetlinMachine *tm, const uint8_t *X, const void *y, uin
 
 // --- Basic output_activation functions ---
 
-// Return the index of the class with the highest vote
-// Basic maxarg
+/**
+ * @brief Output activation returning the index with highest vote.
+ */
 void tm_oa_class_idx(const struct TsetlinMachine *tm, const void *y_pred) {
     if (tm->y_size != 1) {
         fprintf(stderr, "y_eq_class_idx expects y_size == 1");
@@ -726,8 +805,9 @@ void tm_oa_class_idx(const struct TsetlinMachine *tm, const void *y_pred) {
     *label_pred = best_class;
 }
 
-// Return a binary vector based on votes for each class
-// Basic binary thresholding (k=mid_state)
+/**
+ * @brief Output activation returning a binary vector per-class using mid_state threshold.
+ */
 void tm_oa_bin_vector(const struct TsetlinMachine *tm, const void *y_pred) {
     if(tm->y_size != tm->num_classes) {
         fprintf(stderr, "y_eq_bin_vector expects y_size == tm->num_classes");
@@ -742,7 +822,9 @@ void tm_oa_bin_vector(const struct TsetlinMachine *tm, const void *y_pred) {
 }
 
 
-// Set the output activation function for the Tsetlin Machine
+/**
+ * @brief Set a custom output activation function.
+ */
 void tm_set_output_activation(
     struct TsetlinMachine *tm,
     void (*output_activation)(const struct TsetlinMachine *tm, const void *y_pred)
@@ -751,8 +833,9 @@ void tm_set_output_activation(
 }
 
 
-// Internal component of feedback functions below
-// Intuition for the choice is in comments above, for each type_*_feedback function
+/**
+ * @brief Internal helper: decide which feedback (type1/type2) to apply for clause/class.
+ */
 void tm_apply_feedback(struct TsetlinMachine *tm, uint32_t clause_id, uint32_t class_id, uint8_t is_class_positive, const uint8_t *X) {
 	uint8_t is_vote_positive = tm->weights[(clause_id * tm->num_classes) + class_id] >= 0;
 	if (is_vote_positive == is_class_positive) {
@@ -771,6 +854,9 @@ void tm_apply_feedback(struct TsetlinMachine *tm, uint32_t clause_id, uint32_t c
 // --- calculate_feedback ---
 // Calculate clause-class feedback
 
+/**
+ * @brief Calculate feedback when y contains a class index (y_size==1).
+ */
 void tm_feedback_class_idx(struct TsetlinMachine *tm, const uint8_t *X, const void *y) {
     // Pick positive and negative classes based on the label:
     // Positive class is the one that matches the label,
@@ -822,6 +908,9 @@ void tm_feedback_class_idx(struct TsetlinMachine *tm, const uint8_t *X, const vo
     }
 }
 
+/**
+ * @brief Calculate feedback when y is a binary vector of class indicators.
+ */
 void tm_feedback_bin_vector(struct TsetlinMachine *tm, const uint8_t *X, const void *y) {
     // Pick positive and negative classes based on the label:
     // Positive is randomly chosen from the ones that matches the label, weighted by votes,
@@ -895,7 +984,9 @@ negative_feedback:
 }
 
 
-// Set the feedback function for the Tsetlin Machine
+/**
+ * @brief Set a custom feedback function for the TsetlinMachine.
+ */
 void tm_set_calculate_feedback(
     struct TsetlinMachine *tm,
     void (*calculate_feedback)(struct TsetlinMachine *tm, const uint8_t *X, const void *y)

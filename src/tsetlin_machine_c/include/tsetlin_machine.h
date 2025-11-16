@@ -4,9 +4,15 @@
 #include "fast_prng.h"
 
 
-// --- Tsetlin Machine ---
+/** @file tsetlin_machine.h
+ *  @brief Public API for the (dense) Tsetlin Machine implementation.
+ */
 
-// Don't create, modify or free this struct directly, use tm_create, tm_free, etc.
+/** @brief Tsetlin Machine (dense) internal state.
+ *
+ *  Don't create, modify or free this struct directly; use the provided
+ *  constructors and destructors (tm_create, tm_free, etc.).
+ */
 struct TsetlinMachine {
     uint32_t num_classes;
     uint32_t threshold;
@@ -32,23 +38,28 @@ struct TsetlinMachine {
 };
 
 
-// X shape: flat (rows, num_literals) of uint8_t (each uint8_t should be 0 or 1)
-// y shape: flat (rows, y_size) with element size (y_element_size) of any type (void *)
-// y_pred shape: flat (rows, num_classes) with element size (y_element_size) of any type (void *)
+/**
+ *  @note Data layout conventions used across the API:
+ *  - X: flat array of shape (rows, num_literals) of uint8_t (each value 0 or 1)
+ *  - y: flat array of shape (rows, y_size) with element size y_element_size
+ *  - y_pred: flat array of shape (rows, num_classes) with element size y_element_size
+ */
 
-/* Create a Tsetlin Machine
- * 
- * num_classes: number of classes to predict
- * threshold: threshold for clause votes
- * num_literals: number of literals (features) in the input data
- * num_clauses: number of clauses in the Tsetlin Machine
- * max_state: maximum state value for a Tsetlin Automaton (default 127)
- * min_state: minimum state value for a Tsetlin Automaton (default -127)
- * boost_true_positive_feedback: whether to boost true positive feedback (default 1)
- * y_size: size of the output vector (e.g., 1 for labels being class indices)
- * y_element_size: size of each element in the output vector (e.g., sizeof(uint32_t) for labels being class indices)
- * s: sensitivity, learning rate parameter > 1.0 (e.g., 10.0)
- * seed: random seed for reproducibility
+/**
+ * @brief Create and initialize a Tsetlin Machine instance.
+ *
+ * @param num_classes Number of classes to predict.
+ * @param threshold Threshold for clause votes.
+ * @param num_literals Number of literals (features) in the input data.
+ * @param num_clauses Number of clauses in the Tsetlin Machine.
+ * @param max_state Maximum automaton state value.
+ * @param min_state Minimum automaton state value.
+ * @param boost_true_positive_feedback Whether to boost true positive feedback (0/1).
+ * @param y_size Size of the output vector (e.g., 1 for single-label classification).
+ * @param y_element_size Size of each output element (in bytes).
+ * @param s Sensitivity / learning parameter (> 1.0).
+ * @param seed Random seed for reproducibility.
+ * @return Pointer to the created TsetlinMachine, or NULL on allocation failure.
  */
 struct TsetlinMachine *tm_create(
     uint32_t num_classes, uint32_t threshold, uint32_t num_literals, uint32_t num_clauses,
