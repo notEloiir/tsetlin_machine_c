@@ -94,8 +94,8 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
             return
 
         if sys.platform == "win32":  # windows
-            flatcc_name = "flatccrt.dll"
-            tsetlin_name = "tsetlin_machine_c.dll"
+            flatcc_name = "libflatccrt.dll"
+            tsetlin_name = "libtsetlin_machine_c.dll"
             load_mode = 0
         elif sys.platform == "darwin":  # macOS
             flatcc_name = "libflatccrt.dylib"
@@ -111,8 +111,8 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
 
         try:
             if flatcc_path.exists():
-                ctypes.CDLL(str(flatcc_path.resolve()), mode=load_mode)
-            self.lib_tm = ctypes.CDLL(str(tsetlin_path.resolve()), mode=load_mode)
+                ctypes.CDLL(flatcc_path.resolve(), mode=load_mode)
+            self.lib_tm = ctypes.CDLL(tsetlin_path.resolve(), mode=load_mode)
 
             self._configure_c_functions()
         except OSError as e:
