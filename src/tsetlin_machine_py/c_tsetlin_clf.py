@@ -141,7 +141,7 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
             ctypes.c_uint8,  # boost_true_positive_feedback
             ctypes.c_uint32,  # y_size
             ctypes.c_uint32,  # y_element_size
-            ctypes.c_float,  # s
+            ctypes.c_float,  # learning sensitivity (s)
             ctypes.c_uint32,  # seed
         ]
 
@@ -262,6 +262,173 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
 
         self.is_fitted_ = True
         return self
+
+    def init_empty_state(self, n_features, classes):  # TODO: needs testing
+        """
+        Allocate the C Tsetlin Machine once without training.
+
+        Parameters
+        ----------
+        n_features : int
+            Number of binary features (number of literals expected).
+        classes : array-like
+            Full list of classes the model will handle.
+
+        Notes
+        -----
+        After calling this method you can call predict(). The model
+        will produce outputs based on its untrained (initial) state.
+        Use partial_fit or fit to train for meaningful predictions.
+        """
+        # Load C lib
+        self._load_and_configure_lib()
+        if self.lib_tm is None:
+            raise RuntimeError("C library not loaded.")
+
+        # Fit label encoder on the full class set
+        self.label_encoder_ = LabelEncoder()
+        self.label_encoder_.fit(classes)
+        self.classes_ = self.label_encoder_.classes_
+        self.n_classes_ = len(self.classes_)
+
+        if self.n_classes_ < 2:
+            raise ValueError(
+                f"This classifier needs at least 2 classes; got {self.n_classes_}"
+            )
+
+        # Store feature count
+        self.n_features_in_ = int(n_features)
+
+        # Seed
+        random_state_instance = check_random_state(self.random_state)
+        self.seed_ = random_state_instance.randint(0, 2**32, dtype=np.uint32)
+
+        # Create empty TM instance
+        self.tm_instance_ = self.lib_tm.tm_create(
+            self.n_classes_,
+            self.threshold,
+            self.n_features_in_,
+            self.num_clauses,
+            self.max_state,
+            self.min_state,
+            int(self.boost_true_positive_feedback),
+            1,
+            ctypes.sizeof(ctypes.c_uint32),
+            self.s,
+            self.seed_,
+        )
+        if not self.tm_instance_:
+            raise RuntimeError("Failed to create Tsetlin Machine in C backend.")
+
+        # Mark as fitted for prediction availability (untrained initial state).
+        self.is_fitted_ = True
+
+    @_fit_context(prefer_skip_nested_validation=True)
+    def partial_fit(self, X, y, classes=None, epochs=None):  # TODO: needs testing
+        """
+        Incrementally train the existing TM state. First call will initialize
+        an empty state if needed (using `classes` or the unique labels in `y`).
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Binary features.
+        y : array-like, shape (n_samples,)
+            Targets with labels contained in `classes`.
+        classes : array-like, optional
+            Full set of classes. Required on first call if state not initialized.
+        epochs : int, optional
+            Epochs to train this call. Defaults to self.epochs.
+
+        Returns
+        -------
+        self
+        """
+        self._load_and_configure_lib()
+        if self.lib_tm is None:
+            raise RuntimeError("C library not loaded.")
+
+        X, y = check_X_y(X, y, dtype=np.uint8)
+        check_classification_targets(y)
+        if np.any((X != 0) & (X != 1)):
+            raise ValueError("Input X must be binary (contain only 0s and 1s).")
+
+        if self.tm_instance_ is None:
+            full_classes = classes if classes is not None else np.unique(y)
+            self.init_empty_state(X.shape[1], full_classes)
+        else:
+            if X.shape[1] != self.n_features_in_:
+                raise ValueError(
+                    f"Number of features of the input must be {self.n_features_in_}, got {X.shape[1]}"
+                )
+            if classes is not None:
+                provided = np.array(classes)
+                if provided.shape != self.classes_.shape or np.any(
+                    provided != self.classes_
+                ):
+                    raise ValueError(
+                        "Provided classes do not match the classes seen during initialization."
+                    )
+
+        # Map y to encoded ints
+        y_mapped = np.ascontiguousarray(
+            self.label_encoder_.transform(y),
+            dtype=np.uint32,
+        )
+
+        # Train incrementally
+        n_samples = X.shape[0]
+        epochs_to_use = int(self.epochs if epochs is None else epochs)
+
+        X_ptr = X.ctypes.data_as(ctypes.POINTER(ctypes.c_uint8))
+        y_mapped_ptr = y_mapped.ctypes.data_as(ctypes.c_void_p)
+
+        self.lib_tm.tm_train(
+            self.tm_instance_,
+            X_ptr,
+            y_mapped_ptr,
+            n_samples,
+            epochs_to_use,
+        )
+
+        self.is_fitted_ = True
+        return self
+
+    def reset(self):  # TODO: needs testing
+        """Free the C Tsetlin Machine and clear the Python-side state."""
+
+        # Free C-side instance
+        if hasattr(self, "tm_instance_") and self.tm_instance_:
+            if self.lib_tm is None:
+                # Load lib just to free the memory
+                self._load_and_configure_lib()
+
+            if self.lib_tm is not None:
+                try:
+                    self.lib_tm.tm_free(self.tm_instance_)
+                except Exception as e:
+                    # Log or warn if freeing fails, but continue
+                    print(f"Warning: Failed to free C-side TM instance: {e}")
+
+            self.tm_instance_ = None
+
+        # Clear Python-side learned attributes
+        attrs_to_clear = [
+            "label_encoder_",
+            "classes_",
+            "n_classes_",
+            "n_features_in_",
+            "seed_",
+            "is_fitted_",
+            "tm_instance_",
+        ]
+
+        for attr in attrs_to_clear:
+            if hasattr(self, attr):
+                try:
+                    delattr(self, attr)
+                except AttributeError:
+                    pass
 
     def predict(self, X):
         """
