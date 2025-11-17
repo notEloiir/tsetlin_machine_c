@@ -1,17 +1,20 @@
+import ctypes
+import sys
+import sysconfig
 from numbers import Integral, Real
 from pathlib import Path
-import ctypes
-import sysconfig
-import sys
-import os
 
 import numpy as np
-from sklearn.base import BaseEstimator, ClassifierMixin, _fit_context
+from sklearn.base import (
+    BaseEstimator,
+    ClassifierMixin,
+    _fit_context,  # type: ignore[attr-defined]
+)
 from sklearn.preprocessing import LabelEncoder
+from sklearn.utils import check_random_state
 from sklearn.utils._param_validation import Interval
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
-from sklearn.utils import check_random_state
 
 
 class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
@@ -41,13 +44,13 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
     """
 
     _parameter_constraints: dict = {
-        "threshold": [Interval(Integral, 1, None, closed="left")],
-        "num_clauses": [Interval(Integral, 1, None, closed="left")],
-        "max_state": [Interval(Integral, -128, 127, closed="both")],
-        "min_state": [Interval(Integral, -128, 127, closed="both")],
+        "threshold": [Interval(Integral, 1, None, closed="left")],  # type: ignore[reportAbstractUsage]
+        "num_clauses": [Interval(Integral, 1, None, closed="left")],  # type: ignore[reportAbstractUsage]
+        "max_state": [Interval(Integral, -128, 127, closed="both")],  # type: ignore[reportAbstractUsage]
+        "min_state": [Interval(Integral, -128, 127, closed="both")],  # type: ignore[reportAbstractUsage]
         "boost_true_positive_feedback": [bool],
-        "s": [Interval(Real, 1.0, None, closed="left")],
-        "epochs": [Interval(Integral, 1, None, closed="left")],
+        "s": [Interval(Real, 1.0, None, closed="left")],  # type: ignore[reportAbstractUsage]
+        "epochs": [Interval(Integral, 1, None, closed="left")],  # type: ignore[reportAbstractUsage]
         "random_state": ["random_state", None],
         "lib_dir": [str, Path, None],
     }
@@ -110,7 +113,7 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
             if flatcc_path.exists():
                 ctypes.CDLL(str(flatcc_path.resolve()), mode=load_mode)
             self.lib_tm = ctypes.CDLL(str(tsetlin_path.resolve()), mode=load_mode)
-            
+
             self._configure_c_functions()
         except OSError as e:
             raise OSError(
@@ -120,6 +123,9 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
 
     def _configure_c_functions(self):
         """Define argument types and return types for C functions."""
+        if self.lib_tm is None:
+            raise RuntimeError("C library not loaded.")
+
         # Define a pointer to the TsetlinMachine struct
         self.tm_p = ctypes.c_void_p
 
@@ -200,6 +206,8 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
             Fitted estimator.
         """
         self._load_and_configure_lib()
+        if self.lib_tm is None:
+            raise RuntimeError("C library not loaded.")
 
         X, y = check_X_y(X, y, dtype=np.uint8)
         check_classification_targets(y)
@@ -207,7 +215,10 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
             raise ValueError("Input X must be binary (contain only 0s and 1s).")
 
         self.label_encoder_ = LabelEncoder()
-        y_mapped = self.label_encoder_.fit_transform(y).astype(np.uint32)
+        y_mapped = np.ascontiguousarray(
+            self.label_encoder_.fit_transform(y),
+            dtype=np.uint32,
+        )
         self.classes_ = self.label_encoder_.classes_
         self.n_classes_ = len(self.classes_)
 
@@ -269,6 +280,8 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
         check_is_fitted(self, "is_fitted_")
 
         self._load_and_configure_lib()
+        if self.lib_tm is None:
+            raise RuntimeError("C library not loaded.")
 
         X = check_array(X, dtype=np.uint8)
         if np.any((X != 0) & (X != 1)):
@@ -294,6 +307,8 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
         if hasattr(self, "_tm_instance") and self._tm_instance:
             if not hasattr(self, "lib_tm") or self.lib_tm is None:
                 self._load_and_configure_lib()
+            if self.lib_tm is None:
+                raise RuntimeError("C library not loaded.")
             self.lib_tm.tm_free(self._tm_instance)
 
     def _more_tags(self):
