@@ -82,7 +82,7 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
         )
 
         self.lib_tm = None
-        self._tm_instance_ = None
+        self.tm_instance_ = None
 
     def _load_and_configure_lib(self):
         """
@@ -398,7 +398,7 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
         """Free the C Tsetlin Machine and clear the Python-side state."""
 
         # Free C-side instance
-        if hasattr(self, "tm_instance_") and self.tm_instance_:
+        if self.tm_instance_ is not None:
             if self.lib_tm is None:
                 # Load lib just to free the memory
                 self._load_and_configure_lib()
@@ -420,7 +420,6 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
             "n_features_in_",
             "seed_",
             "is_fitted_",
-            "tm_instance_",
         ]
 
         for attr in attrs_to_clear:
