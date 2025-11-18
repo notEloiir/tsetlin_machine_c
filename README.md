@@ -66,7 +66,43 @@ graph TD
 ```
 
 ## Project Structure
-<!-- TODO -->
+- [`CMakeLists.txt`](CMakeLists.txt) : Root CMake build configuration
+- [`pyproject.toml`](pyproject.toml) : Python build configuration (uses `scikit-build-core`)
+- [`third_party/`](third_party/) : Third party dependencies
+  - [`CMakeLists.txt`](third_party/CMakeLists.txt) : CMake configuration for building third party dependencies
+  - [`flatbuffers/`](third_party/flatbuffers/) : FlatBuffers compiler and runtime for Python
+  - [`flatcc/`](third_party/flatcc/) : FlatCC FlatBuffers compiler and runtime for C
+  - [`Unity/`](third_party/Unity/) : Unity test framework for C
+- [`schemas/`](schemas/) : FlatBuffers schemas for Tsetlin Machine model serialization
+  - [`CMakeLists.txt`](schemas/CMakeLists.txt) : CMake configuration for generating FlatBuffers interface code
+  - [`tsetlin_machine.fbs`](schemas/tsetlin_machine.fbs) : Main schema for Dense Tsetlin Machine model
+- [`src/`](src/) : Source code directory
+  - [`tsetlin_machine_c/`](src/tsetlin_machine_c/) : C implementation of Tsetlin Machines
+    - [`CMakeLists.txt`](src/tsetlin_machine_c/CMakeLists.txt) : CMake configuration for Tsetlin Machine C module
+    - [`src/`](src/tsetlin_machine_c/src/) : Source files for all Tsetlin Machine models and functionalities
+      - [`fast_prng.c`](src/tsetlin_machine_c/src/fast_prng.c) : Fast Pseudo-Random Number Generator implementation
+      - [`tsetlin_machine.c`](src/tsetlin_machine_c/src/tsetlin_machine.c) : Dense Tsetlin Machine implementation
+      - [`sparse_tsetlin_machine.c`](src/tsetlin_machine_c/src/sparse_tsetlin_machine.c) : WIP Sparse Tsetlin Machine implementation
+      - [`stateless_tsetlin_machine.c`](src/tsetlin_machine_c/src/stateless_tsetlin_machine.c) : WIP Stateless Tsetlin Machine implementation
+    - [`include/`](src/tsetlin_machine_c/include/) : Header files for Tsetlin Machine C module
+  - [`tsetlin_machine_py/`](src/tsetlin_machine_py/) : Python integrations with green_tsetlin and tsetlin_machine_c
+    - [`c_tsetlin_clf.py`](src/tsetlin_machine_py/c_tsetlin_clf.py) : Bindings for Tsetlin Machine C module with Scikit-learn interface
+    - [`green_tsetlin_clf.py`](src/tsetlin_machine_py/green_tsetlin_clf.py) : Scikit-learn interface for green_tsetlin Dense TM
+    - [`green_tsetlin_sparse_clf.py`](src/tsetlin_machine_py/green_tsetlin_sparse_clf.py) : Scikit-learn interface for green_tsetlin Sparse TM
+    - [`gt_to_fbs.py`](src/tsetlin_machine_py/gt_to_fbs.py) : Export green_tsetlin models to FlatBuffers format
+    - [`gt_to_bin.py`](src/tsetlin_machine_py/gt_to_bin.py) : Export green_tsetlin models to binary format
+- [`examples/`](examples/) : Examples demonstrating usage of the library
+  - [`CMakeLists.txt`](examples/CMakeLists.txt) : CMake configuration for building examples
+  - [`python/`](examples/python/) : Examples using Python bindings
+    - [`noisy_xor.ipynb`](examples/python/noisy_xor.ipynb) : Notebook comparing our library with other ML models on noisy XOR problem
+    - [`digits.ipynb`](examples/python/digits.ipynb) : Notebook demonstrating Tsetlin Machine on MNIST digits dataset
+    - [`f_mnist.ipynb`](examples/python/f_mnist.ipynb) : Notebook demonstrating Tsetlin Machine on Fashion MNIST dataset
+    - [`noisy_xor_testing.ipynb`](examples/python/noisy_xor_testing.ipynb) : Notebook for testing our TMs configurations on noisy XOR problem
+- [`tests/`](tests/) : Tests implementation
+  - [`CMakeLists.txt`](tests/CMakeLists.txt) : CMake configuration for building tests
+  - [`c/`](tests/c/) : C tests for Tsetlin Machine C module using Unity framework
+    - [`test_runner.c`](tests/c/test_runner.c) : Test runner for executing all C tests
+- [`tmp/`](tmp/) : Not yet categorized code snippets and experiments
 
 ## Requirements
 - CMake 3.23+
@@ -79,7 +115,7 @@ cmake -B build
 cmake --build build
 ```
 
-## Build options
+## Build Options
 Defaults set in [CMakeLists.txt](CMakeLists.txt)
 - `-DBUILD_FLATCC=ON/OFF` : Build FlatCC from third_party
 - `-DBUILD_PYTHON=ON/OFF` : Enable building Python bindings
