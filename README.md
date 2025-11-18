@@ -10,7 +10,28 @@ The aim of this work is to develop an execution engine that enables the inferenc
 
 ## Diagram
 ```mermaid
-graph TD
+graph LR
+    %% Embedded Container
+    subgraph embedded ["Embedded (On-Device)"]
+        subgraph tsetlinmachinec ["tsetlin_machine_c"]
+            tmcreate["tm_create"]
+            tmload["tm_load"]
+            tmtrain["tm_train"]
+            tmsave["tm_save"]
+            tmpredict["tm_predict"]
+            
+            %% Vertical linking inside C module
+            tmload --> tmtrain --> tmsave
+        end
+
+        %% Embedded Connections
+        externaldata["EXTERNAL DATA"] --> tmtrain
+        tmpredict --> modeloutput["MODEL OUTPUT"]
+    end
+
+    %% Middle State Node
+    modelstate["ENCODED <br> MODEL STATE"]
+
     %% Host Container
     subgraph host ["Host (PC)"]
         subgraph greentsetlin ["green_tsetlin"]
@@ -32,27 +53,6 @@ graph TD
         trainer --> savetofbs
         trainer --> savetobin
         ctsetlinclassifier --> jupyternotebook
-    end
-
-    %% Middle State Node
-    modelstate["ENCODED <br> MODEL STATE"]
-
-    %% Embedded Container
-    subgraph embedded ["Embedded (On-Device)"]
-        subgraph tsetlinmachinec ["tsetlin_machine_c"]
-            tmcreate["tm_create"]
-            tmload["tm_load"]
-            tmtrain["tm_train"]
-            tmsave["tm_save"]
-            tmpredict["tm_predict"]
-            
-            %% Vertical linking inside C module
-            tmload --> tmtrain --> tmsave
-        end
-
-        %% Embedded Connections
-        externaldata["EXTERNAL DATA"] --> tmtrain
-        tmpredict --> modeloutput["MODEL OUTPUT"]
     end
 
     %% Cross-System Connections
