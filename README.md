@@ -85,12 +85,12 @@ graph LR
       - [`sparse_tsetlin_machine.c`](src/tsetlin_machine_c/src/sparse_tsetlin_machine.c) : WIP Sparse Tsetlin Machine implementation
       - [`stateless_tsetlin_machine.c`](src/tsetlin_machine_c/src/stateless_tsetlin_machine.c) : WIP Stateless Tsetlin Machine implementation
     - [`include/`](src/tsetlin_machine_c/include/) : Header files for Tsetlin Machine C module
-  - [`tsetlin_machine_py/`](src/tsetlin_machine_py/) : Python integrations with green_tsetlin and tsetlin_machine_c
+  - [`tsetlin_machine_py/`](src/tsetlin_machine_py/) : Python integrations with `green_tsetlin` and tsetlin_machine_c
     - [`c_tsetlin_clf.py`](src/tsetlin_machine_py/c_tsetlin_clf.py) : Bindings for Tsetlin Machine C module with Scikit-learn interface
-    - [`green_tsetlin_clf.py`](src/tsetlin_machine_py/green_tsetlin_clf.py) : Scikit-learn interface for green_tsetlin Dense TM
-    - [`green_tsetlin_sparse_clf.py`](src/tsetlin_machine_py/green_tsetlin_sparse_clf.py) : Scikit-learn interface for green_tsetlin Sparse TM
-    - [`gt_to_fbs.py`](src/tsetlin_machine_py/gt_to_fbs.py) : Export green_tsetlin models to FlatBuffers format
-    - [`gt_to_bin.py`](src/tsetlin_machine_py/gt_to_bin.py) : Export green_tsetlin models to binary format
+    - [`green_tsetlin_clf.py`](src/tsetlin_machine_py/green_tsetlin_clf.py) : Scikit-learn interface for `green_tsetlin` Dense TM
+    - [`green_tsetlin_sparse_clf.py`](src/tsetlin_machine_py/green_tsetlin_sparse_clf.py) : Scikit-learn interface for `green_tsetlin` Sparse TM
+    - [`gt_to_fbs.py`](src/tsetlin_machine_py/gt_to_fbs.py) : Export `green_tsetlin` models to FlatBuffers format
+    - [`gt_to_bin.py`](src/tsetlin_machine_py/gt_to_bin.py) : Export `green_tsetlin` models to binary format
 - [`examples/`](examples/) : Examples demonstrating usage of the library
   - [`CMakeLists.txt`](examples/CMakeLists.txt) : CMake configuration for building examples
   - [`python/`](examples/python/) : Examples using Python bindings
@@ -107,7 +107,7 @@ graph LR
 ## Requirements
 - CMake 3.23+
 - GCC-13 Compiler recommended
-- [uv Python manager](https://github.com/astral-sh/uv) (optional, for green_tsetlin integration and jupyter notebooks examples)
+- [uv Python manager](https://github.com/astral-sh/uv) (optional, for `green_tsetlin` integration and jupyter notebooks examples)
 
 ## Build
 ```bash
@@ -134,12 +134,18 @@ cmake --install build --component tsetlin_machine_c
 uv sync
 ```
 
-## TODOs
-<!-- TODO: Update TODOs -->
-1. Consider feasability of using memmap when loading models
-2. Print learning debug (e.g. accuracy) every iteration during training
-3. Add manually adding rules to the model
-4. Add prediction explananations
-5. Add README.md with project description, screenshots and usage instructions
-6.  Test exporting to edge devices with different architectures
-7.  (Optional) Complete and add FBS to Sparse TM
+## Roadmap
+- **Testing and Benchmarking**
+   - **Edge Device Validation:** Conduct testing on various edge device architectures (e.g. Raspberry Pi Pico). 
+   - **Comparative Performance:** Benchmark learning performance and accuracy against other ML models at every few iterations during training.
+   - **Efficiency Analysis:** Measure the number of instructions utilized per prediction and per training epoch.
+   - **Resource Utilization**
+     - Assess model memory usage.
+     - Compare model size with the `green_tsetlin` implementation across different parameter settings.
+     - Determine the size of our C library.
+
+- **Optional Enhancements**
+  - **Memory Loading Optimization:** Consider implementing memory-mapping (`memmap`) when loading models within [`tsetlin_machine.c`](src/tsetlin_machine_c/src/tsetlin_machine.c).
+  - **Manual Rule Integration:** Add functionality to allow manually adding rules to the model.
+  - **Prediction Explainability:** Implement prediction explanations (e.g. showing which rules contributed to the result).
+  - **Sparse Tsetlin Machines:** Complete the Sparse Tsetlin Machine model and integrate the FlatBuffers format for it.
