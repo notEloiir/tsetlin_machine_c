@@ -266,7 +266,7 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
         self.is_fitted_ = True
         return self
 
-    def init_empty_state(self, n_features, classes):  # TODO: needs testing
+    def init_empty_state(self, n_features, classes):
         """
         Allocate the C Tsetlin Machine once without training.
 
@@ -283,12 +283,12 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
         will produce outputs based on its untrained (initial) state.
         Use partial_fit or fit to train for meaningful predictions.
         """
-        # Load C lib
         self._load_and_configure_lib()
         if self.lib_tm is None:
             raise RuntimeError("C library not loaded.")
 
-        # Fit label encoder on the full class set
+        check_classification_targets(classes)
+
         self.label_encoder_ = LabelEncoder()
         self.label_encoder_.fit(classes)
         self.classes_ = self.label_encoder_.classes_
@@ -299,14 +299,14 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
                 f"This classifier needs at least 2 classes; got {self.n_classes_}"
             )
 
-        # Store feature count
         self.n_features_in_ = int(n_features)
 
-        # Seed
         random_state_instance = check_random_state(self.random_state)
         self.seed_ = random_state_instance.randint(0, 2**32, dtype=np.uint32)
 
-        # Create empty TM instance
+        if self.tm_instance_ is not None:
+            self.lib_tm.tm_free(self.tm_instance_)
+
         self.tm_instance_ = self.lib_tm.tm_create(
             self.n_classes_,
             self.threshold,
@@ -315,7 +315,7 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
             self.max_state,
             self.min_state,
             int(self.boost_true_positive_feedback),
-            1,
+            1,  # y_size
             ctypes.sizeof(ctypes.c_uint32),
             self.s,
             self.seed_,
@@ -323,11 +323,11 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
         if not self.tm_instance_:
             raise RuntimeError("Failed to create Tsetlin Machine in C backend.")
 
-        # Mark as fitted for prediction availability (untrained initial state).
+        # Allow predictions on the untrained model
         self.is_fitted_ = True
 
     @_fit_context(prefer_skip_nested_validation=True)
-    def partial_fit(self, X, y, classes=None, epochs=None):  # TODO: needs testing
+    def partial_fit(self, X, y, classes=None, epochs=None):
         """
         Incrementally train the existing TM state. First call will initialize
         an empty state if needed (using `classes` or the unique labels in `y`).
@@ -345,7 +345,8 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
 
         Returns
         -------
-        self
+        self : object
+            Fitted estimator.
         """
         self._load_and_configure_lib()
         if self.lib_tm is None:
@@ -359,27 +360,16 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
         if self.tm_instance_ is None:
             full_classes = classes if classes is not None else np.unique(y)
             self.init_empty_state(X.shape[1], full_classes)
-        else:
-            if X.shape[1] != self.n_features_in_:
-                raise ValueError(
-                    f"Number of features of the input must be {self.n_features_in_}, got {X.shape[1]}"
-                )
-            if classes is not None:
-                provided = np.array(classes)
-                if provided.shape != self.classes_.shape or np.any(
-                    provided != self.classes_
-                ):
-                    raise ValueError(
-                        "Provided classes do not match the classes seen during initialization."
-                    )
+        elif X.shape[1] != self.n_features_in_:
+            raise ValueError(f"Feature mismatch: {X.shape[1]} != {self.n_features_in_}")
+        elif classes is not None and not np.array_equal(classes, self.classes_):
+            raise ValueError("Classes inconsistent with previous fit")
 
-        # Map y to encoded ints
         y_mapped = np.ascontiguousarray(
             self.label_encoder_.transform(y),
             dtype=np.uint32,
         )
 
-        # Train incrementally
         n_samples = X.shape[0]
         epochs_to_use = int(self.epochs if epochs is None else epochs)
 
@@ -397,40 +387,24 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
         self.is_fitted_ = True
         return self
 
-    def reset(self):  # TODO: needs testing
+    def reset(self):
         """Free the C Tsetlin Machine and clear the Python-side state."""
-
-        # Free C-side instance
         if self.tm_instance_ is not None:
-            if self.lib_tm is None:
-                # Load lib just to free the memory
-                self._load_and_configure_lib()
-
+            self._load_and_configure_lib()
             if self.lib_tm is not None:
-                try:
-                    self.lib_tm.tm_free(self.tm_instance_)
-                except Exception as e:
-                    # Log or warn if freeing fails, but continue
-                    print(f"Warning: Failed to free C-side TM instance: {e}")
-
+                self.lib_tm.tm_free(self.tm_instance_)
             self.tm_instance_ = None
 
-        # Clear Python-side learned attributes
-        attrs_to_clear = [
-            "label_encoder_",
+        for attr in [
+            "is_fitted_",
             "classes_",
             "n_classes_",
             "n_features_in_",
+            "label_encoder_",
             "seed_",
-            "is_fitted_",
-        ]
-
-        for attr in attrs_to_clear:
+        ]:
             if hasattr(self, attr):
-                try:
-                    delattr(self, attr)
-                except AttributeError:
-                    pass
+                delattr(self, attr)
 
     def predict(self, X):
         """
