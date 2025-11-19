@@ -176,8 +176,8 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
         # Remove the un-picklable C-level objects before serialization
         if "lib_tm" in state:
             del state["lib_tm"]
-        if "_tm_instance" in state:
-            del state["_tm_instance"]
+        if "tm_instance_" in state:
+            del state["tm_instance_"]
         return state
 
     def __setstate__(self, state):
@@ -186,7 +186,7 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
         # The C library will be loaded on-demand by _load_and_configure_lib()
         # when fit() or predict() is called in the new process.
         self.lib_tm = None
-        self._tm_instance = None
+        self.tm_instance_ = None
 
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(self, X, y):
@@ -233,6 +233,9 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
         random_state_instance = check_random_state(self.random_state)
         self.seed_ = random_state_instance.randint(0, 2**32, dtype=np.uint32)
 
+        if self.tm_instance_ is not None:
+            self.lib_tm.tm_free(self.tm_instance_)
+
         self.tm_instance_ = self.lib_tm.tm_create(
             self.n_classes_,
             self.threshold,
@@ -241,7 +244,7 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
             self.max_state,
             self.min_state,
             int(self.boost_true_positive_feedback),
-            1,
+            1,  # y_size
             ctypes.sizeof(ctypes.c_uint32),
             self.s,
             self.seed_,
@@ -470,12 +473,12 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
         return y_pred
 
     def __del__(self):
-        if hasattr(self, "_tm_instance") and self._tm_instance:
+        if hasattr(self, "tm_instance_") and self.tm_instance_ is not None:
             if not hasattr(self, "lib_tm") or self.lib_tm is None:
                 self._load_and_configure_lib()
             if self.lib_tm is None:
                 raise RuntimeError("C library not loaded.")
-            self.lib_tm.tm_free(self._tm_instance)
+            self.lib_tm.tm_free(self.tm_instance_)
 
     def _more_tags(self):
         return {"binary_only": True}
