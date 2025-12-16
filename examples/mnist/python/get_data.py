@@ -7,8 +7,12 @@ from sklearn.utils import shuffle
 def get_mnist_data():
     n_examples = 70000
     n_literals = 784
-    mnist_x_path = Path("data/demos/mnist/mnist_x_{}_{}.bin".format(n_examples, n_literals))
-    mnist_y_path = Path("data/demos/mnist/mnist_y_{}_{}.bin".format(n_examples, n_literals))
+    
+    base_path = Path(__file__).parent / "../data"
+    base_path.mkdir(parents=True, exist_ok=True)
+
+    mnist_x_path = base_path / "mnist_x_{}_{}.bin".format(n_examples, n_literals)
+    mnist_y_path = base_path / "mnist_y_{}_{}.bin".format(n_examples, n_literals)
 
     if not (mnist_x_path.exists() and mnist_y_path.exists()):
         print("Fetching MNIST data")
@@ -25,11 +29,11 @@ def get_mnist_data():
 
         assert n_examples == x.shape[0]  # 70000
         assert n_literals == x.shape[1]  # 784
-        x.astype(np.uint8).tofile("data/demos/mnist/mnist_x_{}_{}.bin".format(n_examples, n_literals))
-        y.astype(np.uint32).tofile("data/demos/mnist/mnist_y_{}_{}.bin".format(n_examples, n_literals))
+        x.astype(np.uint8).tofile(mnist_x_path)
+        y.astype(np.uint32).tofile(mnist_y_path)
     else:
-        x = np.fromfile("data/demos/mnist/mnist_x_{}_{}.bin".format(n_examples, n_literals), dtype=np.uint8)
-        y = np.fromfile("data/demos/mnist/mnist_x_{}_{}.bin".format(n_examples, n_literals), dtype=np.uint32)
+        x = np.fromfile(mnist_x_path, dtype=np.uint8)
+        y = np.fromfile(mnist_y_path, dtype=np.uint32)
         x = x.reshape((n_examples, n_literals))
 
     return x, y
