@@ -10,7 +10,7 @@ void load_mnist_data(uint8_t *x_data, int32_t *y_data) {
 	int rows = 70000;
 	int cols = 784;
 	
-	FILE *x_file = fopen("data/demos/mnist/mnist_x_70000_784.bin", "rb");
+	FILE *x_file = fopen("examples/mnist/data/mnist_x_70000_784.bin", "rb");
     if (x_file == NULL) {
         fprintf(stderr, "Failed to open x file\n");
         exit(1);
@@ -27,7 +27,7 @@ void load_mnist_data(uint8_t *x_data, int32_t *y_data) {
     fclose(x_file);
 
     // Read y values
-    FILE *y_file = fopen("data/demos/mnist/mnist_y_70000_784.bin", "rb");
+    FILE *y_file = fopen("examples/mnist/data/mnist_y_70000_784.bin", "rb");
     if (y_file == NULL) {
         fprintf(stderr, "Failed to open y file\n");
         free(x_data);

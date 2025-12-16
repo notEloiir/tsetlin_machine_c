@@ -1,12 +1,9 @@
 # Original: https://github.com/ooki/green_tsetlin/blob/master/generator_tests/create_mnist_test_data.py
-
-import os
-import sys
 import green_tsetlin as gt
+from pathlib import Path
 
 from get_data import get_mnist_data
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src/python')))
-from gt_to_bin import save_to_bin
+from tsetlin_machine_py.gt_to_bin import save_to_bin
 
 
 if __name__ == "__main__":
@@ -24,9 +21,10 @@ if __name__ == "__main__":
     tm = gt.TsetlinMachine(n_literals=n_literals, n_clauses=n_clauses, n_classes=n_classes, s=s,
                            threshold=threshold, literal_budget=n_literal_budget)
 
-    tm.load_state("data/demos/mnist/mnist_state.npz")
+    base_path = Path(__file__).parent / "../data"
+    tm.load_state(str(base_path / "mnist_state.npz"))
 
-    save_to_bin(tm, "data/models/mnist_tm.bin")
+    save_to_bin(tm, str(base_path / "mnist_tm.bin"))
 
     correct = 0
     total = 0
