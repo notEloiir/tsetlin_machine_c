@@ -93,11 +93,11 @@ graph LR
     - [`gt_to_bin.py`](src/tsetlin_machine_py/gt_to_bin.py) : Export `green_tsetlin` models to binary format
 - [`examples/`](examples/) : Examples demonstrating usage of the library
   - [`CMakeLists.txt`](examples/CMakeLists.txt) : CMake configuration for building examples
-  - [`python/`](examples/python/) : Examples using Python bindings
-    - [`noisy_xor.ipynb`](examples/python/noisy_xor.ipynb) : Notebook comparing our library with other ML models on noisy XOR problem
-    - [`digits.ipynb`](examples/python/digits.ipynb) : Notebook demonstrating Tsetlin Machine on MNIST digits dataset
-    - [`f_mnist.ipynb`](examples/python/f_mnist.ipynb) : Notebook demonstrating Tsetlin Machine on Fashion MNIST dataset
-    - [`noisy_xor_testing.ipynb`](examples/python/noisy_xor_testing.ipynb) : Notebook for testing our TMs configurations on noisy XOR problem
+  - [`notebooks/`](examples/notebooks/) : Examples using Python bindings
+    - [`noisy_xor.ipynb`](examples/notebooks/noisy_xor.ipynb) : Notebook comparing our library with other ML models on noisy XOR problem
+    - [`digits.ipynb`](examples/notebooks/digits.ipynb) : Notebook demonstrating Tsetlin Machine on MNIST digits dataset
+    - [`f_mnist.ipynb`](examples/notebooks/f_mnist.ipynb) : Notebook demonstrating Tsetlin Machine on Fashion MNIST dataset
+    - [`noisy_xor_testing.ipynb`](examples/notebooks/noisy_xor_testing.ipynb) : Notebook for testing our TMs configurations on noisy XOR problem
 - [`tests/`](tests/) : Tests implementation
   - [`CMakeLists.txt`](tests/CMakeLists.txt) : CMake configuration for building tests
   - [`c/`](tests/c/) : C tests for Tsetlin Machine C module using Unity framework
