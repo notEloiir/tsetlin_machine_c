@@ -1,5 +1,5 @@
-// cmake --build build && ./build/examples/noisy_xor/noisy_xor_benchmark <<<
-// "1000 1000 127 -127 0 3.0 10 42"
+// cmake --build build
+// ./build/examples/noisy_xor/noisy_xor_benchmark <<< "1000 1000 127 -127 0 3.0 10 42"
 #include <stdio.h>
 #include <time.h>
 
@@ -54,14 +54,55 @@ int main() {
   uint32_t seed;  // to be read from stdin
 
   // Read parameters from stdin
-  if (scanf("%u %u %hhd %hhd %hhu %f %d %u", &threshold, &num_clauses,
-            &max_state, &min_state, &boost_true_positive_feedback, &s, &epochs,
-            &seed) != 8) {
-    fprintf(stderr, "Error reading parameters from stdin\n");
+  printf("Enter threshold: ");
+  if (scanf("%u", &threshold) != 1) {
+    fprintf(stderr, "Error reading threshold\n");
     return 1;
   }
 
-  printf("Parameters:\n");
+  printf("Enter num_clauses: ");
+  if (scanf("%u", &num_clauses) != 1) {
+    fprintf(stderr, "Error reading num_clauses\n");
+    return 1;
+  }
+
+  printf("Enter max_state: ");
+  if (scanf("%hhd", &max_state) != 1) {
+    fprintf(stderr, "Error reading max_state\n");
+    return 1;
+  }
+
+  printf("Enter min_state: ");
+  if (scanf("%hhd", &min_state) != 1) {
+    fprintf(stderr, "Error reading min_state\n");
+    return 1;
+  }
+
+  printf("Enter boost_true_positive_feedback: ");
+  if (scanf("%hhu", &boost_true_positive_feedback) != 1) {
+    fprintf(stderr, "Error reading boost_true_positive_feedback\n");
+    return 1;
+  }
+
+  printf("Enter s: ");
+  if (scanf("%f", &s) != 1) {
+    fprintf(stderr, "Error reading s\n");
+    return 1;
+  }
+
+  printf("Enter epochs: ");
+  if (scanf("%d", &epochs) != 1) {
+    fprintf(stderr, "Error reading epochs\n");
+    return 1;
+  }
+
+  printf("Enter seed: ");
+  if (scanf("%u", &seed) != 1) {
+    fprintf(stderr, "Error reading seed\n");
+    return 1;
+  }
+
+  printf("\nParameters:\n");
   printf("  num_classes: %u\n", num_classes);
   printf("  threshold: %u\n", threshold);
   printf("  num_literals: %u\n", num_literals);
