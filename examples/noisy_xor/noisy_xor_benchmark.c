@@ -20,6 +20,20 @@ void print_peak_memory_usage() {
 #endif
 }
 
+void print_memory_usage(struct TsetlinMachine* tm) {
+  if (tm != NULL) {
+    size_t tm_memory = sizeof(struct TsetlinMachine);
+    tm_memory += tm->num_clauses * tm->num_literals * 2 * sizeof(*tm->ta_state);
+    tm_memory += tm->num_clauses * tm->num_classes * sizeof(*tm->weights);
+    tm_memory += tm->num_clauses * sizeof(*tm->clause_output);
+    tm_memory += tm->num_classes * sizeof(*tm->votes);
+    printf("Tsetlin Machine memory usage: %.2f KB\n", tm_memory / 1024.0);
+  }
+
+  size_t dataset_memory = sizeof(X_data) + sizeof(y_data);
+  printf("Dataset memory usage (static): %.2f KB\n", dataset_memory / 1024.0);
+}
+
 void train_model(struct TsetlinMachine* tm, const uint8_t* X_train,
                  const uint32_t* y_train, uint32_t train_samples, int epochs) {
   clock_t start_train = clock();
@@ -138,6 +152,9 @@ int main() {
 
   // Evaluate the model
   evaluate_model(tm, X_test, y_test, test_samples);
+
+  // Print memory usage
+  print_memory_usage(tm);
 
   // Clean up
   tm_free(tm);
