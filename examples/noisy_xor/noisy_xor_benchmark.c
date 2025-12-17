@@ -3,8 +3,22 @@
 #include <stdio.h>
 #include <time.h>
 
+#if defined(__linux__) || defined(__APPLE__) || defined(__unix__)
+#include <sys/resource.h>
+#endif
+
 #include "data/noisy_xor_dataset.h"
 #include "tsetlin_machine.h"
+
+void print_peak_memory_usage() {
+#if defined(__linux__) || defined(__APPLE__) || defined(__unix__)
+  struct rusage usage;
+  getrusage(RUSAGE_SELF, &usage);
+  printf("Peak memory usage: %ld KB\n", usage.ru_maxrss);
+#else
+  printf("Peak memory usage: Not available on this platform\n");
+#endif
+}
 
 void train_model(struct TsetlinMachine* tm, const uint8_t* X_train,
                  const uint32_t* y_train, uint32_t train_samples, int epochs) {
@@ -86,6 +100,9 @@ int main() {
 
   // Clean up
   tm_free(tm);
+
+  // Print peak memory usage
+  print_peak_memory_usage();
 
   return 0;
 }
