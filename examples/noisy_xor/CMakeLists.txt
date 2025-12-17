@@ -2,3 +2,6 @@ add_executable(noisy_xor_generate_dataset noisy_xor_generate_dataset.c)
 
 add_executable(noisy_xor noisy_xor.c)
 target_link_libraries(noisy_xor PRIVATE tsetlin_machine_c)
+
+add_executable(noisy_xor_benchmark noisy_xor_benchmark.c)
+target_link_libraries(noisy_xor_benchmark PRIVATE tsetlin_machine_c)
