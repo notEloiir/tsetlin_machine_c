@@ -75,11 +75,14 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
         self.s = s
         self.epochs = epochs
         self.random_state = random_state
-        self.lib_dir = (
-            (Path(sysconfig.get_paths()["purelib"]) / "lib")
-            if lib_dir is None
-            else lib_dir
-        )
+        if lib_dir is None:
+            base_path = Path(sysconfig.get_paths()["purelib"])
+            if sys.platform == "win32":
+                self.lib_dir = base_path / "bin"
+            else:
+                self.lib_dir = base_path / "lib"
+        else:
+            self.lib_dir = lib_dir
 
         self.lib_tm = None
         self.tm_instance_ = None

@@ -131,7 +131,7 @@ cmake --install build --component tsetlin_machine_c
 
 ## Install with Python
 ```
-uv sync
+uv sync --extra green-tsetlin
 ```
 
 ## Roadmap

@@ -7,7 +7,6 @@ requires-python = ">=3.13"
 dependencies = [
     "datasets>=4.4.1",
     "flatbuffers>=25.9.23",
-    "green-tsetlin>=1.0.1",
     "lightgbm>=4.6.0",
     "matplotlib>=3.10.7",
     "notebook>=7.4.7",
@@ -16,6 +15,8 @@ dependencies = [
     "prettytable>=3.16.0",
     "scikit-learn>=1.6.1",
 ]
+[project.optional-dependencies]
+green-tsetlin = ["green-tsetlin>=1.0.1"]
 
 [build-system]
 requires = ["scikit-build-core"]

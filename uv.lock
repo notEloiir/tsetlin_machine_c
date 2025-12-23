@@ -2469,7 +2469,6 @@ source = { editable = "." }
 dependencies = [
     { name = "datasets" },
     { name = "flatbuffers" },
-    { name = "green-tsetlin" },
     { name = "lightgbm" },
     { name = "matplotlib" },
     { name = "notebook" },
@@ -2479,11 +2478,16 @@ dependencies = [
     { name = "scikit-learn" },
 ]
 
+[package.optional-dependencies]
+green-tsetlin = [
+    { name = "green-tsetlin" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "datasets", specifier = ">=4.4.1" },
     { name = "flatbuffers", specifier = ">=25.9.23" },
-    { name = "green-tsetlin", specifier = ">=1.0.1" },
+    { name = "green-tsetlin", marker = "extra == 'green-tsetlin'", specifier = ">=1.0.1" },
     { name = "lightgbm", specifier = ">=4.6.0" },
     { name = "matplotlib", specifier = ">=3.10.7" },
     { name = "notebook", specifier = ">=7.4.7" },
@@ -2492,6 +2496,7 @@ requires-dist = [
     { name = "prettytable", specifier = ">=3.16.0" },
     { name = "scikit-learn", specifier = ">=1.6.1" },
 ]
+provides-extras = ["green-tsetlin"]
 
 [[package]]
 name = "typer-slim"
