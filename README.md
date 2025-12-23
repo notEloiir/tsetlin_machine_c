@@ -98,6 +98,8 @@ graph LR
     - [`digits.ipynb`](examples/notebooks/digits.ipynb) : Notebook demonstrating Tsetlin Machine on MNIST digits dataset
     - [`f_mnist.ipynb`](examples/notebooks/f_mnist.ipynb) : Notebook demonstrating Tsetlin Machine on Fashion MNIST dataset
     - [`noisy_xor_testing.ipynb`](examples/notebooks/noisy_xor_testing.ipynb) : Notebook for testing our TMs configurations on noisy XOR problem
+  - [`mnist/`](examples/mnist/) : Collection of examples on MNIST dataset
+  - [`noisy_xor/`](examples/noisy_xor/) : Collection of examples on Noisy-XOR problem
 - [`tests/`](tests/) : Tests implementation
   - [`CMakeLists.txt`](tests/CMakeLists.txt) : CMake configuration for building tests
   - [`c/`](tests/c/) : C tests for Tsetlin Machine C module using Unity framework
