@@ -11,47 +11,60 @@ The aim of this work is to develop an execution engine that enables the inferenc
 ## Diagram
 ```mermaid
 graph LR
+    %% Define Styles
+    classDef dotted stroke-dasharray: 5 5;
+
     %% Embedded Container
     subgraph embedded ["Embedded (On-Device)"]
-        subgraph tsetlinmachinec ["tsetlin_machine_c"]
-            tmcreate["tm_create"]
-            tmload["tm_load"]
-            tmtrain["tm_train"]
-            tmsave["tm_save"]
-            tmpredict["tm_predict"]
-            
-            %% Vertical linking inside C module
-            tmload --> tmtrain --> tmsave
+        
+        subgraph tsetlinmachinec ["Core Library in C"]
+            tmcreate["Tsetlin Machine<br>Model Definition"]
+            tmload["Load<br>Model State"]
+            tmtrain["On-Device<br>Training"]
+            tmsave["Save<br>Model State"]
+            tmpredict["Tsetlin Machine<br>Model Inference"]
         end
 
+        externaldata["External<br>Data"]:::dotted
+        modeloutput["Prediction<br>Results"]:::dotted
         %% Embedded Connections
-        externaldata["EXTERNAL DATA"] --> tmtrain
-        tmpredict --> modeloutput["MODEL OUTPUT"]
+        tmload --> tmtrain
+        tmtrain --> tmsave
+        
+        externaldata --> tmtrain
+        tmpredict --> modeloutput
     end
 
     %% Middle State Node
-    modelstate["ENCODED <br> MODEL STATE"]
+    modelstate["Serialized<br>Model State"]:::dotted
 
     %% Host Container
     subgraph host ["Host (PC)"]
-        subgraph greentsetlin ["green_tsetlin"]
-            tsetlinmachine["TsetlinMachine"] --> trainer["Trainer"]
+      
+        subgraph greentsetlin ["External Library"]
+            tsetlinmachine["Tsetlin Machine<br>Model Definition"]
+            trainer["Training Process"]
         end
         
-        subgraph tsetlinmachinepy ["tsetlin_machine_py"]
-            ctsetlinclassifier["CTsetlinClassifier"]
-            savetofbs["save_to_fbs"]
-            savetobin["save_to_bin"]
+        subgraph tsetlinmachinepy ["Python Interface"]
+            savetofbs["Export Model<br>as FlatBuffers"]
+            savetobin["Export Model<br>as Binary"]
+            ctsetlinclassifier["Scikit-learn<br>Interface for<br>the C Core"]
         end
 
-        jupyternotebook["Jupyter Notebook Examples"]
+        jupyternotebook["Jupyter Notebook<br>Integration"]
+        
+        traindata["Training<br>Data"]:::dotted
+        evaldata["Evaluation<br>Data"]:::dotted
 
         %% Host Connections
-        evaldata["EVAL DATA"] --> trainer
-        traindata["TRAIN DATA"] --> trainer
+        tsetlinmachine --> trainer
+        traindata --> trainer
+        evaldata --> trainer
         
         trainer --> savetofbs
         trainer --> savetobin
+        
         ctsetlinclassifier --> jupyternotebook
     end
 
@@ -61,7 +74,7 @@ graph LR
     tmsave --> modelstate
     modelstate --> tmload
 
-    %% Python Bindings (Dashed Line)
+    %% Python Bindings
     tsetlinmachinec -. "Python Bindings" .-> ctsetlinclassifier
 ```
 
