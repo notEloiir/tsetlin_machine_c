@@ -88,6 +88,8 @@ class GreenTsetlinSparseClassifier(ClassifierMixin, BaseEstimator):
         self.active_literals_size = active_literals_size
         self.clause_size = clause_size
         self.n_epochs = n_epochs
+        if random_state is None:
+            random_state = np.random.randint(0, 2**31 - 1)
         self.random_state = random_state
         self.n_jobs = n_jobs
         self.verbose = verbose
