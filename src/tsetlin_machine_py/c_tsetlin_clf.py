@@ -17,6 +17,19 @@ from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
 
 
+class CTsetlinMachine(ctypes.Structure):
+    _fields_ = [
+        ("num_classes", ctypes.c_uint32),
+        ("threshold", ctypes.c_uint32),
+        ("num_literals", ctypes.c_uint32),
+        ("num_clauses", ctypes.c_uint32),
+        ("max_state", ctypes.c_int8),
+        ("min_state", ctypes.c_int8),
+        ("boost_true_positive_feedback", ctypes.c_uint8),
+        ("s", ctypes.c_float),
+    ]
+
+
 class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
     """
     A Scikit-learn compatible Tsetlin Machine classifier with a C backend.
@@ -173,6 +186,38 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
             ctypes.c_uint32,  # rows
         ]
 
+        # tm_save
+        self.lib_tm.tm_save.restype = None
+        self.lib_tm.tm_save.argtypes = [
+            self.tm_p,  # tm
+            ctypes.c_char_p,  # filename
+        ]
+
+        # tm_load
+        self.lib_tm.tm_load.restype = self.tm_p
+        self.lib_tm.tm_load.argtypes = [
+            ctypes.c_char_p,  # filename
+            ctypes.c_uint32,  # y_size
+            ctypes.c_uint32,  # y_element_size
+        ]
+
+        # tm_save_fbs
+        if hasattr(self.lib_tm, "tm_save_fbs"):
+            self.lib_tm.tm_save_fbs.restype = None
+            self.lib_tm.tm_save_fbs.argtypes = [
+                self.tm_p,  # tm
+                ctypes.c_char_p,  # filename
+            ]
+
+        # tm_load_fbs
+        if hasattr(self.lib_tm, "tm_load_fbs"):
+            self.lib_tm.tm_load_fbs.restype = self.tm_p
+            self.lib_tm.tm_load_fbs.argtypes = [
+                ctypes.c_char_p,  # filename
+                ctypes.c_uint32,  # y_size
+                ctypes.c_uint32,  # y_element_size
+            ]
+
     def __getstate__(self):
         """Prepare the instance for pickling."""
         state = self.__dict__.copy()
@@ -190,6 +235,29 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
         # when fit() or predict() is called in the new process.
         self.lib_tm = None
         self.tm_instance_ = None
+
+    def _update_from_c_model(self):
+        """Update Python attributes from the loaded C model."""
+        if not self.tm_instance_:
+            return
+
+        tm_ptr = ctypes.cast(self.tm_instance_, ctypes.POINTER(CTsetlinMachine))
+        tm = tm_ptr.contents
+
+        self.n_classes_ = tm.num_classes
+        self.threshold = tm.threshold
+        self.n_features_in_ = tm.num_literals
+        self.num_clauses = tm.num_clauses
+        self.max_state = tm.max_state
+        self.min_state = tm.min_state
+        self.boost_true_positive_feedback = bool(tm.boost_true_positive_feedback)
+        self.s = tm.s
+
+        # Restore classes_ and label_encoder_
+        # We assume classes are 0..n_classes-1 since we don't save labels in C
+        self.label_encoder_ = LabelEncoder()
+        self.label_encoder_.fit(np.arange(self.n_classes_))
+        self.classes_ = self.label_encoder_.classes_
 
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(self, X, y):
@@ -448,6 +516,106 @@ class CTsetlinClassifier(ClassifierMixin, BaseEstimator):
 
         y_pred = self.label_encoder_.inverse_transform(y_pred_mapped)
         return y_pred
+
+    def save_model(self, path):
+        """
+        Save the current Tsetlin Machine state to a binary file.
+
+        Parameters
+        ----------
+        path : str or Path
+            File path to save the model.
+        """
+        check_is_fitted(self, "is_fitted_")
+        self._load_and_configure_lib()
+        if self.lib_tm is None:
+            raise RuntimeError("C library not loaded.")
+
+        path_bytes = str(path).encode("utf-8")
+        self.lib_tm.tm_save(self.tm_instance_, path_bytes)
+
+    def load_model(self, path):
+        """
+        Load a Tsetlin Machine state from a binary file.
+
+        Parameters
+        ----------
+        path : str or Path
+            File path to load the model from.
+        """
+        self._load_and_configure_lib()
+        if self.lib_tm is None:
+            raise RuntimeError("C library not loaded.")
+
+        if self.tm_instance_ is not None:
+            self.lib_tm.tm_free(self.tm_instance_)
+
+        path_bytes = str(path).encode("utf-8")
+        # For classification, y_size is 1 and element size is uint32
+        self.tm_instance_ = self.lib_tm.tm_load(
+            path_bytes, 1, ctypes.sizeof(ctypes.c_uint32)
+        )
+
+        if not self.tm_instance_:
+            raise RuntimeError(f"Failed to load model from {path}")
+
+        self._update_from_c_model()
+        self.is_fitted_ = True
+
+    def save_model_fbs(self, path):
+        """
+        Save the current Tsetlin Machine state to a FlatBuffers file.
+
+        Parameters
+        ----------
+        path : str or Path
+            File path to save the model.
+        """
+        check_is_fitted(self, "is_fitted_")
+        self._load_and_configure_lib()
+        if self.lib_tm is None:
+            raise RuntimeError("C library not loaded.")
+
+        if not hasattr(self.lib_tm, "tm_save_fbs"):
+            raise NotImplementedError(
+                "The C library was compiled without FlatBuffers support."
+            )
+
+        path_bytes = str(path).encode("utf-8")
+        self.lib_tm.tm_save_fbs(self.tm_instance_, path_bytes)
+
+    def load_model_fbs(self, path):
+        """
+        Load a Tsetlin Machine state from a FlatBuffers file.
+
+        Parameters
+        ----------
+        path : str or Path
+            File path to load the model from.
+        """
+        self._load_and_configure_lib()
+        if self.lib_tm is None:
+            raise RuntimeError("C library not loaded.")
+
+        if not hasattr(self.lib_tm, "tm_load_fbs"):
+            raise NotImplementedError(
+                "The C library was compiled without FlatBuffers support."
+            )
+
+        if self.tm_instance_ is not None:
+            self.lib_tm.tm_free(self.tm_instance_)
+
+        path_bytes = str(path).encode("utf-8")
+        # For classification, y_size is 1 and element size is uint32
+        self.tm_instance_ = self.lib_tm.tm_load_fbs(
+            path_bytes, 1, ctypes.sizeof(ctypes.c_uint32)
+        )
+
+        if not self.tm_instance_:
+            raise RuntimeError(f"Failed to load model from {path}")
+
+        self._update_from_c_model()
+        self.is_fitted_ = True
 
     def __del__(self):
         if hasattr(self, "tm_instance_") and self.tm_instance_ is not None:
