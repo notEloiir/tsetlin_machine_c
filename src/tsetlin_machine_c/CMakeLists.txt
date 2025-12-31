@@ -18,6 +18,14 @@ target_sources(tsetlin_machine_c
             include/stateless_tsetlin_machine.h
 )
 
+if(TARGET tsetlin_machine_c)
+  if(MSVC)
+    target_compile_definitions(tsetlin_machine_c PRIVATE _USE_MATH_DEFINES)
+  else()
+    target_link_libraries(tsetlin_machine_c PRIVATE m)
+  endif()
+endif()
+
 if(BUILD_FLATCC)
     # provide generated schema include paths and flatcc headers only while building
     target_include_directories(tsetlin_machine_c
