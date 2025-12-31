@@ -56,10 +56,11 @@ struct SparseTsetlinMachine {
     void (*calculate_feedback)(struct SparseTsetlinMachine *stm, const uint8_t *X, const void *y);
 
     int8_t mid_state;
-    uint8_t al_row_size;  // binary num_literals + padding == (num_literals - 1) / 8 + 1
+    int32_t clause_max_size;
+    uint32_t *clause_sizes;
     float s_inv, s_min1_inv;
     struct TAStateNode **ta_state;  // shape: (num_clauses) linked list pointers
-    uint8_t *active_literals;  // shape: flat padded binary (num_classes, al_row_size)
+    struct TAStateNode **active_literals;  // shape: (num_classes) linked list pointers
     int16_t *weights;  // shape: flat (num_clauses, num_classes)
     uint8_t *clause_output;  // shape: (num_clauses)
     int32_t *votes;  // shape: (num_classes)
