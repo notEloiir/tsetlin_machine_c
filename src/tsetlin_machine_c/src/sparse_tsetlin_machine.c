@@ -150,7 +150,7 @@ struct SparseTsetlinMachine *stm_create(
         return NULL;
     }
     for (uint32_t class_id = 0; class_id < stm->num_classes; class_id++) {
-    	stm->ta_state[class_id] = NULL;
+    	stm->active_literals[class_id] = NULL;
     }
 
     stm->clause_sizes = (uint32_t *)malloc(num_clauses * sizeof(uint32_t));
@@ -257,8 +257,7 @@ struct SparseTsetlinMachine *stm_load_dense(
         fclose(file);
         return NULL;
     }
-
-	stm_clear_llists(stm);
+    
     for (uint32_t clause_id = 0; clause_id < stm->num_clauses; clause_id++) {
     	struct TAStateNode *prev_ptr = NULL;
     	struct TAStateNode **head_ptr_addr = stm->ta_state + clause_id;
