@@ -13,9 +13,11 @@
  * @return Clipped value in [-threshold, threshold].
  */
 static inline int32_t clip(const int32_t x, const int32_t threshold) {
-    if (x > threshold) return threshold;
-    else if (x < -threshold) return -threshold;
-    return x;
+	if (x > threshold)
+		return threshold;
+	else if (x < -threshold)
+		return -threshold;
+	return x;
 }
 
 /**
@@ -23,8 +25,9 @@ static inline int32_t clip(const int32_t x, const int32_t threshold) {
  * @note This is a GCC/Clang statement-expression; behaviour on other compilers
  *       may be undefined. Keep usage minimal to avoid portability issues.
  */
-#define min(a,b) \
-   ({ __typeof__ (a) _a = (a); \
-       __typeof__ (b) _b = (b); \
-     _a < _b ? _a : _b; })
-
+#define min(a, b)                                                                        \
+	({                                                                                   \
+		__typeof__(a) _a = (a);                                                          \
+		__typeof__(b) _b = (b);                                                          \
+		_a < _b ? _a : _b;                                                               \
+	})
