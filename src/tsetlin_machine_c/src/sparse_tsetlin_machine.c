@@ -441,7 +441,7 @@ void stm_free(struct SparseTsetlinMachine *stm) {
  */
 void stm_initialize(struct SparseTsetlinMachine *stm) {
     stm->mid_state = (stm->max_state + stm->min_state) / 2;
-    stm->sparse_min_state = stm->mid_state - 40;
+    stm->sparse_min_state = stm->mid_state - 20;
     stm->sparse_init_state = stm->sparse_min_state + 5;
     stm->s_inv = 1.0f / stm->s;
     stm->s_min1_inv = (stm->s - 1.0f) / stm->s;
