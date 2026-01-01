@@ -21,7 +21,7 @@ class GreenTsetlinClassifier(ClassifierMixin, BaseEstimator):
         The S hyperparameter for the Tsetlin Machine.
     threshold : int, default=1000
         The T threshold for the Tsetlin Machine.
-    literal_budget : int, default=4
+    literal_budget : int, default=None
         The literal budget for the Tsetlin Machine.
     boost_true_positives : bool, default=False
         Whether to boost true positive feedback.
@@ -41,7 +41,7 @@ class GreenTsetlinClassifier(ClassifierMixin, BaseEstimator):
         "n_clauses": [Interval(Integral, 1, None, closed="left")],
         "s": [Interval(Real, 1, None, closed="neither")],
         "threshold": [Interval(Integral, 1, None, closed="left")],
-        "literal_budget": [Interval(Integral, 1, None, closed="left")],
+        "literal_budget": [Interval(Integral, 1, None, closed="left"), None],
         "boost_true_positives": [bool],
         "n_epochs": [Interval(Integral, 1, None, closed="left")],
         "random_state": ["random_state"],
@@ -54,7 +54,7 @@ class GreenTsetlinClassifier(ClassifierMixin, BaseEstimator):
         n_clauses=1000,
         s=3.0,
         threshold=1000,
-        literal_budget=4,
+        literal_budget=None,
         boost_true_positives=False,
         n_epochs=10,
         random_state=None,
