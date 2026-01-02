@@ -565,7 +565,7 @@ void type_1a_feedback(struct SparseTsetlinMachine *stm, const uint8_t *X,
 				uint8_t al_size = 0;
 				while (al_ptr != NULL) {
 					if (al_ptr->ta_id == literal_id) {
-						is_active_literal = true;
+						is_active_literal = 1;
 						break;
 					}
 					prev_al_ptr = al_ptr;
@@ -693,7 +693,7 @@ void type_2_feedback(struct SparseTsetlinMachine *stm, const uint8_t *X,
 				struct TAStateNode *al_ptr = stm->active_literals[class_id];
 				while (al_ptr != NULL) {
 					if (al_ptr->ta_id == literal_id) {
-						is_active_literal = true;
+						is_active_literal = 1;
 						break;
 					}
 					al_ptr = al_ptr->next;
