@@ -18,12 +18,12 @@ target_sources(tsetlin_machine_c
             include/stateless_tsetlin_machine.h
 )
 
-if(TARGET tsetlin_machine_c)
-  if(MSVC)
+find_library(MATH_LIBRARY m)
+if(MSVC)
     target_compile_definitions(tsetlin_machine_c PRIVATE _USE_MATH_DEFINES)
-  else()
-    target_link_libraries(tsetlin_machine_c PRIVATE m)
-  endif()
+endif()
+if(MATH_LIBRARY)
+    target_link_libraries(tsetlin_machine_c PRIVATE ${MATH_LIBRARY})
 endif()
 
 if(BUILD_FLATCC)
